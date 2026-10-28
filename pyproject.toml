@@ -40,14 +40,6 @@ geo = [
     "pyarrow>=15",
 ]
 
-# Shapefile and GeoJSON reading, for `scripts/download_data.py` only.
-# geopandas 1.x already depends on pyogrio, so this adds nothing on top of
-# `[geo]` today; it records what that script needs in case geopandas ever
-# makes pyogrio optional.
-convert = [
-    "pyogrio>=0.8",
-]
-
 # Progress bars for `scripts/geocode.py`. Not used by the library.
 scripts = [
     "tqdm>=4.0",

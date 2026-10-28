@@ -1,132 +1,180 @@
 # Installation and data
 
-## Install profiles
+Three steps: install the package, download eight files into `downloads/`, and
+run `python scripts/setup_data.py`. It writes what the geocoder needs into
+`data/`. When it prints `Ready.`, the geocoder, the scripts and the service all
+work, and `downloads/` can be deleted.
 
-The package is `metalog-geocoding` (Python >= 3.11).
+Two directories, so the downloads never mix with what the geocoder loads:
 
-| Install | Adds | Size | For |
+| Directory | Who writes it | What's in it | Keep it? |
 | --- | --- | --- | --- |
-| `metalog-geocoding` | client, cache, MarineRegions hierarchy walk, naming tables, path resolution | 0.2 MB + `requests` | anything that only calls the service or reads a hierarchy back |
-| `metalog-geocoding[geo]` | geopandas, shapely, pyproj, pandas, numpy, pyarrow | ~353 MB installed | computing anything: the service, batch runs, scripts |
-| `metalog-geocoding[convert]` | pyogrio (shapefile/GeoJSON reading) | +0 today | `scripts/download_data.py` |
-| `metalog-geocoding[scripts]` | tqdm | small | the `scripts/` harness |
-| `metalog-geocoding[service]` | flask, gunicorn | small | running the HTTP service |
-| `metalog-geocoding[test]` | pytest | small | the test suite |
+| `downloads/` | you, by hand | the eight downloads, about 1 GB unpacked | no; delete it after `Ready.` |
+| `data/` | `setup_data.py` | eight files, ~415 MB, loaded by the geocoder | yes; this is what the service mounts |
 
-`import metalog_geocoding` works without the geo stack. The geocoder classes
-(`ReverseGeocoder`, `LandGeocoder`, `NaturalEarthLandGeocoder`, `SeaGeocoder`,
-`LonghurstGeocoder`, `FallbackGeocoder`) are resolved lazily, and asking for
-one without `[geo]` raises an error naming the extra. `[convert]` currently
-costs nothing because geopandas 1.x already requires pyogrio; it is kept as the
-record of what `download_data.py` needs.
+## 1. Install
 
-For a development checkout:
+Python >= 3.11. From a checkout:
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt        # == pip install -e .[geo,convert,scripts]
+pip install -r requirements.txt        # == pip install -e '.[geo,scripts]'
 ```
 
-Memory: loading the boundary layers takes about 660 MB RSS (roughly 1.2 GB with
-the coastline index loaded, which the library does lazily and the service
-eagerly). The polygons, not the Python wrappers, account for most of it.
+That is the install for running the geocoder on your own machine, and the one
+the rest of this page assumes. Install something else only in these cases:
 
-## Boundary layers
+| You want to | Install |
+| --- | --- |
+| Geocode or check coordinates here (scripts or Python) | `pip install -r requirements.txt` |
+| Also run the HTTP service | `pip install -e '.[geo,scripts,service]'`, or use the Docker image ([service/README.md](../service/README.md)) |
+| Also run the tests | add `test`: `pip install -e '.[geo,scripts,test]'` |
+| Only send coordinates to a service someone else runs | `pip install .` (no extras; no data needed) |
 
-Setting up `data/` takes four steps: download the sources by hand, convert them,
-build the landmass names, and optionally pre-build the IHO pickle. Nothing is
-downloaded automatically; some of the pages need a browser.
+The extras exist because the geometry stack is large. Computing anything needs
+geopandas, shapely, pyproj, pandas, numpy and pyarrow (~353 MB installed), but
+a program that only calls the service (`metalog_geocoding.client`) or reads a
+hierarchy table back needs none of it. So the base package is pure Python plus
+`requests`, and everything else is opt-in:
 
-### 1. Download
-
-| Download | From | Put in `data/` |
+| Extra | Adds | Needed for |
 | --- | --- | --- |
-| Natural Earth 10m *Admin 0 - Countries* and *Admin 1 - States, Provinces* (shapefile zips) | [naturalearthdata.com](https://www.naturalearthdata.com/downloads/10m-cultural-vectors/) | extract both: `ne_10m_admin_0_countries.shp`, `ne_10m_admin_1_states_provinces.shp` (+ `.shx`, `.dbf`, `.prj`, `.cpg`) |
-| IHO Sea Areas v3 | [marineregions.org/downloads.php](https://www.marineregions.org/downloads.php) | extract: `World_Seas_IHO_v3.shp` (+ sidecars) |
-| Longhurst Provinces v4 | [marineregions.org/downloads.php](https://www.marineregions.org/downloads.php) | extract: `Longhurst_world_v4_2010.shp` (+ sidecars) |
-| GSHHG 2.3.7 shapefiles, `gshhg-shp-2.3.7.zip` (~150 MB) | [soest.hawaii.edu/pwessel/gshhg](https://www.soest.hawaii.edu/pwessel/gshhg/) | extract into `data/gshhg/`, so that `data/gshhg/GSHHS_shp/f/GSHHS_f_L1.shp` exists |
+| `geo` | geopandas, shapely, pyproj, pandas, numpy, pyarrow | any lookup, and `setup_data.py` |
+| `scripts` | tqdm | progress bars in `scripts/geocode.py` |
+| `service` | flask, gunicorn | `service/app.py` |
+| `test` | pytest | the test suite |
 
-For step 3 you also need, anywhere on disk: GeoNames `allCountries.zip` (~400 MB, 1.8 GB unpacked)
-and `countryInfo.txt` from [download.geonames.org/export/dump](https://download.geonames.org/export/dump/),
-and Natural Earth's 10m physical *Geography Regions* polygons
-(`ne_10m_geography_regions_polys.shp`).
+Without `geo`, `import metalog_geocoding` still works; asking for a geocoder
+class (`ReverseGeocoder`, `SeaGeocoder`, ...) raises an error that says to
+install `[geo]`.
 
-`python scripts/download_data.py` with nothing in place prints these
-instructions and lists what is missing.
+Memory: the loaded layers take about 660 MB RSS, or about 1.2 GB once the
+coastline index is loaded (the library loads it on the first coastal lookup,
+the service at startup).
 
-### 2. Convert
+## 2. Download the data
 
-```bash
-python scripts/download_data.py
+Nothing is downloaded automatically, and the MarineRegions files need a
+browser (there is a short form to fill in). Put everything in `downloads/` in
+the repository (or anywhere else, and pass `--downloads-dir`).
+
+| # | Download | From | It must end up at |
+| --- | --- | --- | --- |
+| 1 | Natural Earth 10m *Admin 0 – Countries*, shapefile zip | [Natural Earth, cultural vectors](https://www.naturalearthdata.com/downloads/10m-cultural-vectors/) | `downloads/ne_10m_admin_0_countries.shp` |
+| 2 | Natural Earth 10m *Admin 1 – States, Provinces*, shapefile zip | same page | `downloads/ne_10m_admin_1_states_provinces.shp` |
+| 3 | Natural Earth 10m *Geography Regions* polygons (under *Labels*) | [Natural Earth, physical vectors](https://www.naturalearthdata.com/downloads/10m-physical-vectors/) | `downloads/ne_10m_geography_regions_polys.shp` |
+| 4 | MarineRegions *IHO Sea Areas*, version 3, shapefile | [marineregions.org/downloads.php](https://www.marineregions.org/downloads.php) | `downloads/World_Seas_IHO_v3.shp` |
+| 5 | MarineRegions *Longhurst Provinces*, version 4 | same page | `downloads/Longhurst_world_v4_2010.shp` |
+| 6 | GSHHG 2.3.7 shapefiles, `gshhg-shp-2.3.7.zip` (~150 MB) | [soest.hawaii.edu/pwessel/gshhg](https://www.soest.hawaii.edu/pwessel/gshhg/) | `downloads/gshhg/GSHHS_shp/f/GSHHS_f_L1.shp` |
+| 7 | GeoNames `allCountries.zip` (~400 MB) | [download.geonames.org/export/dump](https://download.geonames.org/export/dump/) | `downloads/geonames/allCountries.zip` (leave it zipped) |
+| 8 | GeoNames `countryInfo.txt` | same page | `downloads/geonames/countryInfo.txt` |
+
+Files 1–5 are zips: extract each straight into `downloads/`, keeping the files
+that come with the `.shp` (`.shx`, `.dbf`, `.prj`, `.cpg`). Extract the GSHHG
+zip into `downloads/gshhg/` instead, so that its `GSHHS_shp/` folder lands
+there. When you are done, `downloads/` looks like this:
+
+```
+downloads/
+├── ne_10m_admin_0_countries.shp          (+ .shx .dbf .prj .cpg)
+├── ne_10m_admin_1_states_provinces.shp   (+ .shx .dbf .prj .cpg)
+├── ne_10m_geography_regions_polys.shp    (+ .shx .dbf .prj .cpg)
+├── World_Seas_IHO_v3.shp                 (+ .shx .dbf .prj)
+├── Longhurst_world_v4_2010.shp           (+ .shx .dbf .prj)
+├── gshhg/
+│   └── GSHHS_shp/f/GSHHS_f_L1.shp ...    (the script reads L1, L2 and L5)
+└── geonames/
+    ├── allCountries.zip
+    └── countryInfo.txt
 ```
 
-converts whatever is present to GeoParquet and skips any parquet newer than its
-source, so it is safe to run again. (A Natural Earth `.geojson` of the same name is
-accepted in place of the shapefile.)
+What each is for: Natural Earth admin-0/1 gives the country and region on
+land, IHO the sea, Longhurst the biogeochemical province, and GSHHG the
+distance to the coast. Files 3, 7 and 8 are used once, by the setup script, to
+name each GSHHG landmass (`coast_landmass_name`) and give it a country; they
+are not read at run time. Licences are listed in the [README](../README.md#data-sources-and-licences).
 
-| File | Source | Size |
-| --- | --- | --- |
-| `ne_10m_admin_0_countries.parquet` | Natural Earth admin-0 (258 units) | ~7 MB |
-| `ne_10m_admin_1_states_provinces.parquet` | Natural Earth admin-1 (4,596 units) | ~21 MB |
-| `World_Seas_IHO_v3.parquet` | MarineRegions IHO Sea Areas v3 (101 polygons) | ~140 MB |
-| `Longhurst_world_v4_2010.parquet` | MarineRegions Longhurst Provinces v4 (54 provinces) | ~3 MB |
-| `GSHHS_f_L1.parquet` | GSHHG 2.3.7 full-resolution land (179,837 polygons) | ~98 MB |
-| `GSHHS_f_L5.parquet` | GSHHG Antarctic ice front | ~2.5 MB |
-| `GSHHS_f_L2.parquet` | GSHHG lakes; read only by step 3 | ~9 MB |
-
-### 3. Build the landmass names
-
-`GSHHS_f_names.parquet` (~5 MB) names each GSHHG landmass and gives its country,
-so that `coast_landmass_name` and the nearest coast's country can be reported. It
-is required: without it the data directory check fails. It is built from the
-step 2 output (GSHHG L1, L2, L5 and both Natural Earth layers), so run it after
-that:
+## 3. Run the setup script
 
 ```bash
-python scripts/build_landmass_names.py \
-    --geonames path/to/allCountries.zip \
-    --country-info path/to/countryInfo.txt \
-    --ne-regions path/to/ne_10m_geography_regions_polys.shp \
-    --islands-cache path/to/geonames_islands.parquet   # optional
+python scripts/setup_data.py
 ```
 
-Reading `allCountries.zip` takes about 3 minutes; `--islands-cache` keeps the
-extracted island features so that a rebuild takes under a minute. GeoNames is not
-needed at run time. See [methods.md](methods.md#distance-to-coast).
+It reads the files above from `downloads/` and writes everything the geocoder
+loads into `data/`. A first run takes a minute or two. To use other locations,
+pass `--downloads-dir` and `--data-dir` (or set `$METALOG_GEOCODING_DATA`; see
+[below](#where-the-data-directory-is-found)).
 
-Once the parquet files exist, the shapefiles, `data/gshhg/`, the GeoNames dump and
-`GSHHS_f_L2.parquet` are no longer needed at run time; `download_data.py` treats a
-layer whose parquet exists as present.
+1. **Check the downloads.** It prints a checklist; for anything missing it
+   says where to get it and the path it must have, then stops. Fix those and
+   run it again.
+2. **Convert to GeoParquet**, which loads much faster than shapefiles:
 
-### 4. The IHO pickle (optional)
+   | Reads from `downloads/` | Writes to `data/` |
+   | --- | --- |
+   | `ne_10m_admin_0_countries.shp` | `ne_10m_admin_0_countries.parquet` (~7 MB) |
+   | `ne_10m_admin_1_states_provinces.shp` | `ne_10m_admin_1_states_provinces.parquet` (~21 MB) |
+   | `World_Seas_IHO_v3.shp` | `World_Seas_IHO_v3.parquet` (~140 MB) |
+   | `Longhurst_world_v4_2010.shp` | `Longhurst_world_v4_2010.parquet` (~3 MB) |
+   | `gshhg/GSHHS_shp/f/GSHHS_f_L1.shp` | `GSHHS_f_L1.parquet` (~98 MB) |
+   | `gshhg/GSHHS_shp/f/GSHHS_f_L5.shp` | `GSHHS_f_L5.parquet` (~2.5 MB) |
 
-On first load the sea geocoder writes `data/World_Seas_IHO_v3.pkl` (~150 MB),
-which loads faster and with a lower memory peak than the parquet. It is used
-only when newer than the parquet, and any failure to read or write it falls
-back to the parquet silently. The service mounts `data/` read-only and so never
-writes it. To have it there, load the sea layer once with write access before
-starting the service:
+3. **Name the landmasses.** Runs `scripts/build_landmass_names.py`, which reads
+   the parquet files from step 2 plus, from `downloads/`,
+   `ne_10m_geography_regions_polys.shp`, `geonames/` and the GSHHG lakes
+   (`GSHHS_f_L2.shp`), and writes `data/GSHHS_f_names.parquet` (~5 MB). It
+   also writes `downloads/geonames/geonames_islands.parquet`, so a rebuild
+   skips the slow read of `allCountries.zip`.
+4. **Write `data/World_Seas_IHO_v3.pkl`** (~150 MB), a copy of the IHO layer that
+   loads faster and with less memory than the parquet. The geocoder would
+   otherwise write it on first use, which it cannot do when `data/` is mounted
+   read-only, as in the service.
+5. **Check `data/`** and print `Ready.`
 
-```bash
-python -c "from metalog_geocoding import SeaGeocoder; SeaGeocoder('data', 'cache')"
+Every step skips outputs that are newer than their inputs, so running it again
+is cheap; `--force` redoes steps 2 and 3. `--verify-only` runs only step 5.
+
+A Natural Earth `.geojson` in place of the `.shp` (same name, other extension)
+is accepted too.
+
+### Cleaning up
+
+Once it has printed `Ready.`, `data/` holds everything the geocoder reads:
+
+```
+data/
+├── ne_10m_admin_0_countries.parquet
+├── ne_10m_admin_1_states_provinces.parquet
+├── World_Seas_IHO_v3.parquet
+├── World_Seas_IHO_v3.pkl
+├── Longhurst_world_v4_2010.parquet
+├── GSHHS_f_L1.parquet
+├── GSHHS_f_L5.parquet
+└── GSHHS_f_names.parquet
 ```
 
-The pickle is tied to the geopandas/pandas/shapely versions that wrote it. If the
-service starts slowly after an image upgrade, delete it and build it again.
+Delete all of `downloads/`. Running `setup_data.py` again afterwards still
+works: a download whose output is in `data/` counts as done. Keep
+`downloads/` only if you expect to rebuild with a newer GeoNames dump or
+Natural Earth release, since the landmass names are rebuilt from the
+downloads, not from `data/`.
 
-### Replacing a layer
+A `data/` directory set up before this layout may also hold shapefiles,
+`gshhg/`, `geonames/` and `GSHHS_f_L2.parquet`. None of these is read at run
+time any more; delete them.
 
-The result caches record answers, not the data version they came from. After
-replacing any layer (a new Natural Earth release, a rebuilt
-`GSHHS_f_names.parquet`), delete `cache/*.sqlite*` *and* any old
-`cache/*_cache.tsv` (otherwise the TSV is imported again). Re-running
-`download_data.py` writes a parquet newer than the pickle, so the pickle is
-ignored until it is rebuilt (step 4).
+## Updating a layer
 
-### Map layers (optional)
+Download the new file to its path in `downloads/` and run `setup_data.py`
+again; it rebuilds whatever depends on it. Rebuilding the landmass names needs
+`downloads/geonames/`, `downloads/gshhg/` and the Geography Regions shapefile
+to be there too. Then delete the result caches,
+`cache/*.sqlite*` *and* any `cache/*_cache.tsv` (otherwise the TSV is imported
+again): they record answers, not the data version they came from.
 
-The simplified GeoJSON map layers are built from the same `data/` by
-`scripts/build_geojson.py`; see [map-layers.md](map-layers.md).
+The IHO pickle depends on the geopandas/pandas/shapely versions that wrote it.
+If the service starts slowly after an upgrade, delete `World_Seas_IHO_v3.pkl`
+and run `setup_data.py` again.
 
 ## Where the data directory is found
 
@@ -134,7 +182,7 @@ First hit wins:
 
 1. an explicit path (`--data-dir`, or the `data_dir` argument to `ReverseGeocoder`),
 2. `$METALOG_GEOCODING_DATA`,
-3. `./data`.
+3. `./data`, relative to the current directory.
 
 ```python
 from metalog_geocoding.paths import data_dir
@@ -151,3 +199,9 @@ volume.
 `cache/land_cache.sqlite` and `cache/sea_cache.sqlite` are described in
 [methods.md](methods.md#caching). The sea-to-ocean chains for all 101 IHO seas ship
 with the package, so the pipeline needs no network, even with an empty cache directory.
+
+## Map layers
+
+The simplified GeoJSON map layers for the browser are a separate build from the
+same `data/`, needed only if you want to draw maps; see
+[map-layers.md](map-layers.md).

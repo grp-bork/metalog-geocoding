@@ -45,7 +45,7 @@ def data_dir(explicit: "str | os.PathLike[str] | None" = None, *, require: bool 
             through to the environment and then to ``./data``.
         require: Check that the directory exists and holds every layer,
             raising `DataDirectoryNotFound` naming what is missing. Off by
-            default because `scripts/download_data.py` points at a directory
+            default because `scripts/setup_data.py` points at a directory
             it is about to populate.
 
     Returns:
@@ -63,13 +63,13 @@ def data_dir(explicit: "str | os.PathLike[str] | None" = None, *, require: bool 
                 f"boundary layer directory not found: {path.absolute()}\n"
                 f"Set ${DATA_DIR_ENV} to the mounted volume, pass --data-dir, "
                 f"or create the ./data symlink.\n"
-                f"Run: python scripts/download_data.py"
+                f"Run: python scripts/setup_data.py"
             )
         missing = [name for name in REQUIRED_LAYERS if not (path / name).exists()]
         if missing:
             raise DataDirectoryNotFound(
                 f"boundary layers missing from {path.absolute()}:\n"
                 + "".join(f"  {name}\n" for name in missing)
-                + "Run: python scripts/download_data.py"
+                + "Run: python scripts/setup_data.py"
             )
     return path

@@ -168,7 +168,7 @@ class NaturalEarthLandGeocoder:
                 raise FileNotFoundError(
                     f"Natural Earth data not found: {path}\n"
                     "Expected the 10m admin-0 and admin-1 layers as GeoParquet.\n"
-                    "Run: python scripts/download_data.py"
+                    "Run: python scripts/setup_data.py"
                 )
 
         self.adm0 = self._read(adm0_path, ADM0_COLUMNS)

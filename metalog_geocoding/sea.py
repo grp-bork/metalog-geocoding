@@ -81,7 +81,7 @@ class SeaGeocoder:
         if not iho_file.exists():
             raise FileNotFoundError(
                 f"IHO Sea Areas data not found: {iho_file}\n"
-                f"Run: python scripts/download_data.py"
+                f"Run: python scripts/setup_data.py"
             )
 
         return iho_file
@@ -92,7 +92,7 @@ class SeaGeocoder:
             raise FileNotFoundError(
                 f"IHO Sea Areas data not found: {self.iho_path}\n"
                 "Expected: World_Seas_IHO_v3.parquet\n"
-                "Run: python scripts/download_data.py"
+                "Run: python scripts/setup_data.py"
             )
 
         # Try pickle cache first

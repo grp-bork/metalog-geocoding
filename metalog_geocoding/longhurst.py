@@ -52,7 +52,7 @@ class LonghurstGeocoder:
         if not self.path.exists():
             raise FileNotFoundError(
                 f"Longhurst Provinces data not found: {self.path}\n"
-                f"Run: python scripts/download_data.py"
+                f"Run: python scripts/setup_data.py"
             )
 
         self.provinces = gpd.read_parquet(self.path, columns=LONGHURST_COLUMNS)

@@ -15,10 +15,12 @@ between countries (Ireland, Hispaniola). The GeoNames country covers islets
 Natural Earth lacks, where the nearest Natural Earth country can be the wrong
 one.
 
-    python scripts/build_landmass_names.py \\
-        --geonames geonames/allCountries.zip \\
-        --country-info geonames/countryInfo.txt \\
-        --ne-regions ne_10m_geography_regions_polys.shp
+Normally run by ``scripts/setup_data.py``. Every input defaults to its
+place in the downloads directory (see docs/installation-and-data.md); the
+GSHHG and Natural Earth parquet layers are read from the data directory, where
+the output is written too:
+
+    python scripts/build_landmass_names.py --downloads-dir downloads --data-dir data
 """
 
 import argparse
@@ -131,16 +133,34 @@ def iso2_to_adm0(country_info: Path, adm0: pd.DataFrame) -> dict[str, str]:
 
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--geonames", type=Path, required=True)
-    p.add_argument("--country-info", type=Path, required=True)
-    p.add_argument("--ne-regions", type=Path, required=True,
-                   help="Natural Earth ne_10m_geography_regions_polys.shp (public domain)")
-    p.add_argument("--data-dir", type=Path, default=None)
+    p.add_argument("--data-dir", type=Path, default=None,
+                   help="where the converted layers are read and the names written "
+                        "(default: $METALOG_GEOCODING_DATA, else data/)")
+    p.add_argument("--downloads-dir", type=Path, default=Path("downloads"),
+                   help="where the downloads are; the defaults below are relative to it "
+                        "(default: downloads/)")
+    p.add_argument("--geonames", type=Path, default=None,
+                   help="GeoNames allCountries.zip (default: DOWNLOADS/geonames/allCountries.zip)")
+    p.add_argument("--country-info", type=Path, default=None,
+                   help="GeoNames countryInfo.txt (default: DOWNLOADS/geonames/countryInfo.txt)")
+    p.add_argument("--ne-regions", type=Path, default=None,
+                   help="Natural Earth ne_10m_geography_regions_polys.shp, public domain "
+                        "(default: DOWNLOADS/ne_10m_geography_regions_polys.shp)")
+    p.add_argument("--lakes", type=Path, default=None,
+                   help="GSHHG lakes, GSHHS_f_L2.shp "
+                        "(default: DOWNLOADS/gshhg/GSHHS_shp/f/GSHHS_f_L2.shp)")
     p.add_argument("--islands-cache", type=Path, default=None,
                    help="parquet to keep the extracted island features in; reading "
-                        "allCountries.zip is most of the run time")
+                        "allCountries.zip is most of the run time "
+                        "(default: DOWNLOADS/geonames/geonames_islands.parquet)")
     args = p.parse_args()
     data = resolve_data_dir(args.data_dir)
+    downloads = args.downloads_dir
+    args.geonames = args.geonames or downloads / "geonames" / "allCountries.zip"
+    args.country_info = args.country_info or downloads / "geonames" / "countryInfo.txt"
+    args.ne_regions = args.ne_regions or downloads / "ne_10m_geography_regions_polys.shp"
+    args.lakes = args.lakes or downloads / "gshhg" / "GSHHS_shp" / "f" / "GSHHS_f_L2.shp"
+    args.islands_cache = args.islands_cache or downloads / "geonames" / "geonames_islands.parquet"
 
     import geopandas as gpd
     from pyproj import Geod
@@ -148,7 +168,7 @@ def main():
     geod = Geod(ellps="WGS84")
     l1 = gpd.read_parquet(data / "GSHHS_f_L1.parquet", columns=["id", "area", "geometry"])
     l5 = gpd.read_parquet(data / "GSHHS_f_L5.parquet", columns=["id", "area", "geometry"])
-    l2 = gpd.read_parquet(data / "GSHHS_f_L2.parquet", columns=["geometry"])
+    l2 = gpd.read_file(args.lakes, columns=["geometry"])
     land = pd.concat([l1, l5], ignore_index=True)
     geoms = np.asarray(land.geometry.values)
     tree = shapely.STRtree(geoms)
@@ -167,13 +187,16 @@ def main():
         if isinstance(code, str) and code and gn_counts[code] == 1
     }
 
-    if args.islands_cache and args.islands_cache.exists():
+    # The cache stands in for allCountries.zip unless the zip is newer.
+    if args.islands_cache.exists() and not (
+        args.geonames.exists()
+        and args.geonames.stat().st_mtime > args.islands_cache.stat().st_mtime
+    ):
         isl = pd.read_parquet(args.islands_cache)
     else:
         print(f"reading {args.geonames} ...", flush=True)
         isl = read_islands(args.geonames)
-        if args.islands_cache:
-            isl.to_parquet(args.islands_cache)
+        isl.to_parquet(args.islands_cache)
     print(f"  {len(isl):,} island features", flush=True)
 
     t0 = time.time()

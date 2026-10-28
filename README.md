@@ -49,14 +49,16 @@ Notes:
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt        # == pip install -e .[geo,convert,scripts]
-python scripts/download_data.py        # prints download steps, converts to GeoParquet
+pip install -r requirements.txt        # == pip install -e '.[geo,scripts]'
+# download the eight data files into downloads/ (see the link below), then:
+python scripts/setup_data.py           # writes data/; ends with "Ready."
+rm -r downloads                        # no longer needed
 ```
 
-The base package (`pip install .`) is pure Python plus `requests` and contains
-only the client and the naming/schema tables; computing anything needs the
-`[geo]` extra (geopandas, shapely, pyproj, pandas, numpy, pyarrow). See
-[docs/installation-and-data.md](docs/installation-and-data.md).
+The downloads (Natural Earth, MarineRegions, GSHHG, GeoNames; MarineRegions
+needs a browser) and the exact path each must have are listed in
+[docs/installation-and-data.md](docs/installation-and-data.md). Running
+`setup_data.py` before downloading anything prints the same list.
 
 ## Quick start
 
@@ -94,7 +96,7 @@ python service/app.py                    # http://localhost:8007
 
 | Document | Contents |
 | --- | --- |
-| [docs/installation-and-data.md](docs/installation-and-data.md) | Install profiles, downloading and converting the layers, where the data directory is found |
+| [docs/installation-and-data.md](docs/installation-and-data.md) | Which install you need, the data downloads and where each goes, the setup script |
 | [docs/usage.md](docs/usage.md) | Batch CLI, Python API, output fields |
 | [docs/methods.md](docs/methods.md) | Land lookup and fallback ladder, continents, country names, sea lookup and hierarchy, Longhurst, distance to coast, caching |
 | [docs/location-hierarchy.md](docs/location-hierarchy.md) | The long-format `location_hierarchy` table: schemes, levels, SQL |

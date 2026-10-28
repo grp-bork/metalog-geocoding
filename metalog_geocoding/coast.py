@@ -37,7 +37,7 @@ from pyproj import Geod, Transformer
 
 from .hierarchy_table import COAST_SOURCE, GSHHG_RESOLUTION  # noqa: F401 (re-exported)
 
-#: Parquet layers, converted from GSHHS_shp/f/ by scripts/download_data.py.
+#: Parquet layers, converted from GSHHS_shp/f/ by scripts/setup_data.py.
 COAST_LAYERS = {
     1: f"GSHHS_{GSHHG_RESOLUTION}_L1.parquet",
     5: f"GSHHS_{GSHHG_RESOLUTION}_L5.parquet",
@@ -153,7 +153,7 @@ class CoastDistance:
             if not path.exists():
                 raise FileNotFoundError(
                     f"GSHHG layer not found: {path}\n"
-                    f"Run: python scripts/download_data.py"
+                    f"Run: python scripts/setup_data.py"
                 )
             layers[level] = gpd.read_parquet(path, columns=GSHHG_COLUMNS)
 

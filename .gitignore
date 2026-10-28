@@ -45,3 +45,6 @@ Thumbs.db
 CLAUDE.md
 .claude/
 .remember/
+
+# Downloaded sources for scripts/setup_data.py; deletable once it has run
+/downloads
