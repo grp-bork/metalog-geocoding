@@ -252,6 +252,14 @@ def test_land_claimed_where_there_is_only_open_ocean_is_an_error(checker):
     # The code is what a report groups by; the reason names the stated value.
     assert "Germany" in verdict.reason
     assert "not on land" in verdict.reason and "10 km" in verdict.reason
+    # As on land, the reason names how far away the claimed place is.
+    assert "the nearest land called 'Germany' is 13,597 km away" in verdict.reason
+
+
+def test_not_on_land_says_when_the_name_is_unknown_too(checker):
+    verdict = check(checker, 65.0, 0.0, "Atlantis")
+    assert verdict.code == CODE_NOT_ON_LAND
+    assert "not a country or territory" in verdict.reason
 
 
 def test_a_direct_hit_error_names_both_places_and_the_distance(checker):

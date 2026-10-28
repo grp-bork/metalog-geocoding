@@ -395,9 +395,27 @@ class LocationChecker:
                     if lat < POLAR_LATITUDE_THRESHOLD
                     else DISTANCE_THRESHOLD_M
                 )
+                # Name the distance to the claim as the direct-hit message
+                # does, so the reader sees the scale of the error either way.
+                detail = ""
+                if self.claims is not None and sample.geographic_location:
+                    claim_distance = self.claim_distance(
+                        expected, sample, include_dependencies=False
+                    )
+                    if claim_distance is not None:
+                        detail = (
+                            f"; the nearest land called {stated} is "
+                            f"{_distance(claim_distance)} away"
+                        )
+                    elif self.claim_distance(expected, sample) is None:
+                        detail = (
+                            f"; {stated} is not a country or territory that "
+                            f"Natural Earth maps either"
+                        )
                 return "error", CODE_NOT_ON_LAND, (
                     f"the sample states {stated}, but the coordinate is not on "
                     f"land: there is none at all within {_distance(radius)} of it"
+                    f"{detail}"
                 )
             return "error", CODE_NOT_ON_SEA, (
                 f"the sample states the sea {stated}, but the coordinate is not in "
