@@ -7,7 +7,7 @@ answers two questions about coordinates:
   rows does its coordinate contribute? (grading)
 - **`POST /geocode`**: what is at this point? (raw lookup, no grading)
 
-This document describes the service version `0.1.0`. Examples were produced by
+This document describes the service version `0.2.0`. Examples were produced by
 running the Flask test client against the real boundary layers with the
 bundled marine vocabulary (see [Vocabulary](#vocabulary)).
 
@@ -106,7 +106,7 @@ curl -s http://localhost:8007/health
   "layers_loaded": true,
   "location_exceptions": 0,
   "status": "ok",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "vocabulary_size": 175
 }
 ```
@@ -354,7 +354,7 @@ curl -s http://localhost:8007/options
 
 ```json
 {
-  "version": "0.1.0",
+  "version": "0.2.0",
   "has_vocabulary": true,
   "geocode_types": ["auto", "best", "land", "sea", "both"],
   "artificial_no_location": ["mock", "negative control"],

@@ -118,8 +118,8 @@ resolves to the latest release. The citation metadata is in
 exports it as APA or BibTeX.
 
 > Kuhn, M. *metalog-geocoding: an offline reverse geocoder for land, sea and
-> distance to coast* (version 0.1.0).
-> [doi:10.5281/zenodo.23734817](https://doi.org/10.5281/zenodo.23734817)
+> distance to coast* (version 0.2.0).
+> [doi:10.5281/zenodo.23738733](https://doi.org/10.5281/zenodo.23738733)
 
 Please also cite the underlying data:
 
