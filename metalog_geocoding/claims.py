@@ -12,6 +12,7 @@ from pyproj import Geod
 from shapely.geometry import Point
 from shapely.ops import nearest_points
 
+from .containment import CONTAINED_IN
 from .country_aliases import canonical
 
 #: Not used for grading. Kept as a reminder of why no rule is gated on the
@@ -53,6 +54,10 @@ class ClaimChecker:
     to it: the unit of that name plus every unit whose ``SOVEREIGNT`` is that
     name, since Natural Earth splits overseas territories (Curacao, Aruba,
     Christmas Island, ...) into their own units.
+
+    A territory in ``containment.CONTAINED_IN`` (Svalbard, French Guiana, ...)
+    is measured against its own admin-1 polygon, never the whole unit that
+    contains it.
     """
 
     def __init__(self, land_geocoder):
@@ -69,6 +74,11 @@ class ClaimChecker:
             sovereign = row.get("SOVEREIGNT")
             if sovereign and canonical(sovereign) != canonical(name or ""):
                 self.by_name.setdefault(canonical(sovereign), []).append(row.geometry)
+        adm1 = land_geocoder.adm1.set_index("adm1_code").geometry
+        for claimed, territory in CONTAINED_IN.items():
+            geom = adm1[territory.adm1_code]
+            self.by_name[canonical(claimed)] = [geom]
+            self.by_own_name[canonical(claimed)] = [geom]
 
     def distance_m(
         self, claimed: str, lat: float, lon: float, include_dependencies: bool = True

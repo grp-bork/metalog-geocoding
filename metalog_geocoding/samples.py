@@ -23,6 +23,7 @@ CODE_NOT_ON_SEA = "not_on_sea"
 CODE_UNRELATED_SEA = "unrelated_sea"
 CODE_CLAIM_TOO_FAR = "claim_too_far"
 CODE_DIFFERENT_LOCATION = "different_location"
+CODE_UNKNOWN_PLACE = "unknown_place"
 CODE_DERIVED_COORDINATES = "derived_coordinates"
 CODE_NO_COORDINATES = "no_coordinates"
 CODE_ACCEPTED_EXCEPTION = "accepted_exception"
@@ -37,6 +38,7 @@ ERROR_CODES = (
     CODE_UNRELATED_SEA,
     CODE_CLAIM_TOO_FAR,
     CODE_DIFFERENT_LOCATION,
+    CODE_UNKNOWN_PLACE,
 )
 
 

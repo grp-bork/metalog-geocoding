@@ -20,7 +20,9 @@ ALIAS_GROUPS: list[tuple[str, ...]] = [
     ("United States", "United States of America", "USA", "U.S.A.", "US"),
     ("United Kingdom", "Great Britain", "UK", "Britain"),
     ("Russia", "Russian Federation"),
-    ("South Korea", "Republic of Korea", "Korea, Republic of", "Korea South"),
+    # Bare "Korea" is ambiguous, but in sample metadata it means South Korea
+    # (3,601 samples in microbeatlas, none in the North).
+    ("South Korea", "Republic of Korea", "Korea, Republic of", "Korea South", "Korea"),
     (
         "North Korea",
         "Democratic People's Republic of Korea",
@@ -62,6 +64,7 @@ ALIAS_GROUPS: list[tuple[str, ...]] = [
     ("Micronesia", "Federated States of Micronesia"),
     ("Turkey", "Türkiye", "Turkiye"),
     ("Falkland Islands", "Malvinas", "Falkland Islands (Malvinas)"),
+    ("Faroe Islands", "Faeroe Islands"),
     ("Hong Kong", "Hong Kong SAR", "Hong Kong S.A.R.", "Hong Kong SAR China"),
     ("Macao", "Macau", "Macao SAR", "Macao S.A.R."),
     ("Central African Republic", "Central African Rep."),

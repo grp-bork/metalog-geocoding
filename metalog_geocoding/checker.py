@@ -48,6 +48,7 @@ from .samples import (
     CODE_NOT_ON_SEA,
     CODE_OK,
     CODE_OUT_OF_RANGE,
+    CODE_UNKNOWN_PLACE,
     CODE_UNRELATED_SEA,
     ERROR_CODES,
     NO_COORDINATES,
@@ -85,6 +86,7 @@ __all__ = [
     "CODE_NOT_ON_SEA",
     "CODE_OK",
     "CODE_OUT_OF_RANGE",
+    "CODE_UNKNOWN_PLACE",
     "CODE_UNRELATED_SEA",
     "coordinate_error",
     "distinct_coordinates",
@@ -421,9 +423,14 @@ class LocationChecker:
         found = result.get("country") or self.published_sea(result) or ""
 
         # The claim is a territory inside the returned unit that Natural Earth
-        # has no polygon for. See containment.py.
+        # has no admin-0 polygon for. See containment.py. The names agree, but
+        # the point must also be in the territory, not elsewhere in the unit
+        # (Svalbard, not Oslo); otherwise fall through and report the distance.
         if is_contained_in(expected, found):
-            return "ok", CODE_OK, ""
+            inside = self.claim_distance(expected, sample, include_dependencies=False)
+            limit = CLAIM_NEAR_M if result.get("is_fallback") else CLAIM_BORDER_M
+            if inside is None or inside <= limit:
+                return "ok", CODE_OK, ""
 
         # Sea vs sea: related (one contains the other in the IHO hierarchy) or
         # different water. A verdict either way is terminal; an unrelated pair
@@ -490,21 +497,23 @@ class LocationChecker:
                 f"{_distance(border_distance)} away: a border, not a different place"
             )
 
+        # Natural Earth has no unit or territory of that name, so no coordinate
+        # could match it: a problem with the name, not with the coordinate.
+        if loc_type == "land" and self.claims is not None and border_distance is None:
+            return "error", CODE_UNKNOWN_PLACE, (
+                f"the sample states {stated}, which is not a country or territory "
+                f"that Natural Earth maps, so no coordinate can match it; the "
+                f"coordinate is inside {_named(found)}"
+            )
+
         # Name both places and the distance between them: 14 km suggests a
         # misplaced site, 9,000 km a scrambled column.
         detail = ""
         if loc_type == "land" and self.claims is not None:
-            if border_distance is None:
-                # Natural Earth has no unit of that name.
-                detail = (
-                    f"; Natural Earth has no country called {stated}, so the two "
-                    f"could not agree however good the coordinate is"
-                )
-            else:
-                detail = (
-                    f"; the nearest land called {stated} is "
-                    f"{_distance(border_distance)} away"
-                )
+            detail = (
+                f"; the nearest land called {stated} is "
+                f"{_distance(border_distance)} away"
+            )
         return "error", CODE_DIFFERENT_LOCATION, (
             f"the sample states {stated}, but the coordinate is inside "
             f"{_named(found)}{detail}"

@@ -13,6 +13,8 @@ from metalog_geocoding.samples import (
     CODE_CLAIM_TOO_FAR,
     CODE_DIFFERENT_LOCATION,
     CODE_NOT_ON_LAND,
+    CODE_OK,
+    CODE_UNKNOWN_PLACE,
     Sample,
 )
 
@@ -260,6 +262,38 @@ def test_a_direct_hit_error_names_both_places_and_the_distance(checker):
     assert "Botswana" in verdict.reason
     assert "Zimbabwe" in verdict.reason
     assert "14 km" in verdict.reason
+
+
+def test_a_name_natural_earth_cannot_place_has_its_own_code(checker):
+    """An unknown name is a problem with the name, not the coordinate, so it
+    must not read like a known place at the wrong spot."""
+    verdict = check(checker, 40.0, -100.0, "Atlantis")
+    assert verdict.code == CODE_UNKNOWN_PLACE
+    assert "Atlantis" in verdict.reason and "United States" in verdict.reason
+
+
+def test_a_territory_is_checked_against_its_own_polygon(checker):
+    """Svalbard is inside Natural Earth's Norway unit, but a Svalbard sample
+    near Oslo is a wrong coordinate, and one in the US is a known name far
+    away, not an unknown one."""
+    assert check(checker, 78.2, 15.6, "Svalbard").code == CODE_OK
+    near_oslo = check(checker, 60.0, 10.0, "Svalbard")
+    assert near_oslo.code == CODE_DIFFERENT_LOCATION
+    assert "1,650 km" in near_oslo.reason
+    assert check(checker, 40.0, -100.0, "Svalbard").code == CODE_DIFFERENT_LOCATION
+    assert check(checker, 48.8, 2.3, "French Guiana").code == CODE_DIFFERENT_LOCATION
+    assert check(checker, 4.9, -52.3, "French Guiana").code == CODE_OK
+
+
+def test_the_two_indian_ocean_territories_are_told_apart(checker):
+    """One Natural Earth unit covers both islands, ~1,000 km apart."""
+    assert check(checker, -12.18, 96.83, "Christmas Island").code == CODE_CLAIM_TOO_FAR
+    assert check(checker, -12.18, 96.83, "Cocos Islands").code == CODE_OK
+
+
+def test_common_spellings_match_natural_earth(checker):
+    assert check(checker, 62.07, -7.31, "Faroe Islands").code == CODE_OK
+    assert check(checker, 37.5, 127.0, "Korea").code == CODE_OK
 
 
 def test_a_far_claim_on_a_fallback_names_both_distances(checker):

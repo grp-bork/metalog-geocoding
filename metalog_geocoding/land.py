@@ -212,8 +212,9 @@ class NaturalEarthLandGeocoder:
            continent assignment.
         3. No admin-0 unit outside ``COUNTRY_NAME_OVERRIDES`` has an
            abbreviated ``NAME_LONG``, which would otherwise be published.
-        4. Every ``CONTAINED_IN`` target is a name this class can publish, and no
-           ``CONTAINED_IN`` key has become a Natural Earth unit in its own right.
+        4. Every ``CONTAINED_IN`` target is a name this class can publish, no
+           ``CONTAINED_IN`` key has become a Natural Earth unit in its own right,
+           and every territory's admin-1 polygon exists inside its target.
 
         The tables were written against a specific Natural Earth release; if a
         newer release adds or removes units, silently falling back would put
@@ -242,12 +243,17 @@ class NaturalEarthLandGeocoder:
                 f"published as-is: {abbreviated}"
             )
 
+        published = {
+            a3: COUNTRY_NAME_OVERRIDES.get(a3) or name
+            for a3, name in zip(self.adm0["ADM0_A3"], self.adm0["NAME_LONG"])
+            if isinstance(name, str)
+        }
         validate_targets(
+            set(published.values()),
             {
-                COUNTRY_NAME_OVERRIDES.get(a3) or name
-                for a3, name in zip(self.adm0["ADM0_A3"], self.adm0["NAME_LONG"])
-                if isinstance(name, str)
-            }
+                code: published.get(a3)
+                for code, a3 in zip(self.adm1["adm1_code"], self.adm1["adm0_a3"])
+            },
         )
 
         blank_continent = self.adm0["CONTINENT"].isna() | (
