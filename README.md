@@ -108,7 +108,15 @@ python service/app.py                    # http://localhost:8007
 
 ## Citation and attribution
 
-If you use the output, cite the underlying data:
+If you use metalog-geocoding or its output, please cite the software. Each
+release is archived on Zenodo with its own DOI; cite the version you used. The
+citation metadata is in [`CITATION.cff`](CITATION.cff), and GitHub's
+"Cite this repository" button exports it as APA or BibTeX.
+
+> Kuhn, M. *metalog-geocoding: an offline reverse geocoder for land, sea and
+> distance to coast* (version 0.1.0). https://github.com/grp-bork/metalog-geocoding
+
+Please also cite the underlying data:
 
 - Natural Earth (public domain; attribution appreciated).
 - Flanders Marine Institute, IHO Sea Areas v3 and Longhurst Provinces v4,

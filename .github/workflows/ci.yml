@@ -72,5 +72,15 @@ jobs:
       - run: pytest -q
       - run: pip list --format=freeze
 
+  # GitHub and Zenodo silently ignore an invalid CITATION.cff.
+  citation:
+    runs-on: ubuntu-latest
+    container: python:3.14-trixie
+    steps:
+      - uses: actions/checkout@v5
+      - run: pip install --quiet cffconvert
+      - run: cffconvert --validate
+
 # Releasing: `version` is read from `metalog_geocoding.__version__`, so bump
-# that, commit, tag.
+# that and `version` in CITATION.cff, commit, tag, then publish a GitHub release
+# (Zenodo archives releases, not bare tags).

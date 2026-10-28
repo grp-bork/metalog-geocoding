@@ -1,0 +1,75 @@
+# Read by GitHub ("Cite this repository") and by Zenodo when it archives a
+# release. Keep `version` in step with `metalog_geocoding.__version__`.
+cff-version: 1.2.0
+message: >-
+  If you use metalog-geocoding, please cite it using the metadata below, and
+  also cite the data sources listed under "references".
+type: software
+title: "metalog-geocoding: an offline reverse geocoder for land, sea and distance to coast"
+authors:
+  - family-names: Kuhn
+    given-names: Michael
+    orcid: "https://orcid.org/0000-0002-2841-872X"
+repository-code: "https://github.com/grp-bork/metalog-geocoding"
+url: "https://github.com/grp-bork/metalog-geocoding"
+license: MIT
+version: 0.1.0
+abstract: >-
+  An offline reverse geocoder. Given a latitude and longitude it returns either
+  a land location (continent, country, first-level administrative region;
+  Natural Earth) or an ocean/sea (IHO Sea Areas plus the Longhurst
+  biogeochemical province; MarineRegions), falls back to the nearest polygon
+  for near-shore points, and measures the signed distance to the coast (GSHHG).
+  Developed for the Metalog metagenomics database to annotate sample
+  coordinates.
+keywords:
+  - reverse geocoding
+  - geocoding
+  - marine regions
+  - Longhurst provinces
+  - metagenomics
+  - sample metadata
+references:
+  - type: data
+    title: Natural Earth
+    authors:
+      - name: Natural Earth
+    url: "https://www.naturalearthdata.com/"
+    license: CC0-1.0
+  - type: data
+    title: IHO Sea Areas, version 3
+    authors:
+      - name: Flanders Marine Institute
+    url: "https://www.marineregions.org/"
+    license: CC-BY-4.0
+  - type: data
+    title: Longhurst Provinces, version 4
+    authors:
+      - name: Flanders Marine Institute
+    url: "https://www.marineregions.org/"
+    license: CC-BY-4.0
+  - type: book
+    title: Ecological Geography of the Sea
+    authors:
+      - family-names: Longhurst
+        given-names: Alan R.
+  - type: article
+    title: A global, self-consistent, hierarchical, high-resolution shoreline database
+    authors:
+      - family-names: Wessel
+        given-names: Paul
+      - family-names: Smith
+        given-names: Walter H. F.
+    journal: Journal of Geophysical Research
+    volume: 101
+    issue: B4
+    start: 8741
+    end: 8743
+    year: 1996
+    doi: 10.1029/96JB00104
+  - type: data
+    title: GeoNames
+    authors:
+      - name: GeoNames
+    url: "https://www.geonames.org/"
+    license: CC-BY-4.0
