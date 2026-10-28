@@ -1,5 +1,7 @@
 # metalog-geocoding
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23734816.svg)](https://doi.org/10.5281/zenodo.23734816)
+
 An offline reverse geocoder. Given `(latitude, longitude)` it returns either a
 **land** location (continent, country, first-level administrative region;
 [Natural Earth](https://www.naturalearthdata.com/)) or an **ocean/sea**
@@ -109,12 +111,15 @@ python service/app.py                    # http://localhost:8007
 ## Citation and attribution
 
 If you use metalog-geocoding or its output, please cite the software. Each
-release is archived on Zenodo with its own DOI; cite the version you used. The
-citation metadata is in [`CITATION.cff`](CITATION.cff), and GitHub's
-"Cite this repository" button exports it as APA or BibTeX.
+release is archived on Zenodo with its own DOI; cite the version you used.
+[doi:10.5281/zenodo.23734816](https://doi.org/10.5281/zenodo.23734816) always
+resolves to the latest release. The citation metadata is in
+[`CITATION.cff`](CITATION.cff), and GitHub's "Cite this repository" button
+exports it as APA or BibTeX.
 
 > Kuhn, M. *metalog-geocoding: an offline reverse geocoder for land, sea and
-> distance to coast* (version 0.1.0). https://github.com/grp-bork/metalog-geocoding
+> distance to coast* (version 0.1.0).
+> [doi:10.5281/zenodo.23734817](https://doi.org/10.5281/zenodo.23734817)
 
 Please also cite the underlying data:
 
