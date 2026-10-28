@@ -219,7 +219,7 @@ Use this when there is no sample to grade.
 | Field | Type | Required | Meaning |
 | --- | --- | --- | --- |
 | `coordinates` | array of `[latitude, longitude]` | yes | Same shape rules as for `/check`. |
-| `type` | string | no, default `"auto"` | One of `auto`, `best`, `land`, `sea`, `both`. `best` runs both lookups and returns one result (`ReverseGeocoder.geocode_best`): a direct land hit wins, else a direct sea hit, else whichever fallback snapped over the shorter distance, else the unknown result; the entry's `requested_type` is `best` and `result.type` says which won. `auto` classifies `geographic_location` the same way `/check` does (a sea name gives `sea`, anything else, including empty, gives `land`). `both` returns a land and a sea lookup per coordinate. |
+| `type` | string | no, default `"auto"` | One of `auto`, `best`, `land`, `sea`, `both`. `best` returns one result (`ReverseGeocoder.geocode_best`): a direct land hit wins (the sea lookup is then skipped), else a direct sea hit, else whichever fallback snapped over the shorter distance, else the unknown result; the entry's `requested_type` is `best` and `result.type` says which won. `auto` classifies `geographic_location` the same way `/check` does (a sea name gives `sea`, anything else, including empty, gives `land`). `both` returns a land and a sea lookup per coordinate. |
 | `geographic_location` | string | no | Only used when `type` is `auto`. |
 
 **Response (200)**: `{"results": [...]}` with one entry per coordinate **per

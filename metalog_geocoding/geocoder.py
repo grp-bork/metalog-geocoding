@@ -432,15 +432,17 @@ class ReverseGeocoder:
         whichever fallback result snapped over the shorter distance
         (``fallback_distance_m``, land winning a tie); otherwise the unknown
         result, which carries ``type == "unknown"``.
-        """
-        land = self.geocode(lat, lon, "land")
-        sea = self.geocode(lat, lon, "sea")
 
+        The sea lookup is skipped after a direct land hit, since it could not
+        change the answer; such a point gets no sea cache entry.
+        """
         def found(result: dict) -> bool:
             return result.get("type") in ("land", "sea")
 
+        land = self.geocode(lat, lon, "land")
         if found(land) and not land.get("is_fallback"):
             return land
+        sea = self.geocode(lat, lon, "sea")
         if found(sea) and not sea.get("is_fallback"):
             return sea
         candidates = [r for r in (land, sea) if found(r)]

@@ -85,6 +85,19 @@ def test_land_found_nearest_is_reported_even_when_the_nudge_misses(geocoder):
     assert "name_1" not in result
 
 
+def test_best_skips_the_sea_lookup_after_a_direct_land_hit(geocoder, monkeypatch):
+    """A direct land hit wins whatever the sea says, and the sea lookup of an
+    inland point (nearest-sea search) is the slow part of a "best" run."""
+    def no_sea(lat, lon, location_type, _geocode=geocoder.geocode):
+        assert location_type != "sea"
+        return _geocode(lat, lon, location_type)
+
+    monkeypatch.setattr(geocoder, "geocode", no_sea)
+    result = geocoder.geocode_best(52.52, 13.405)
+    assert result["type"] == "land"
+    assert result["is_fallback"] is False
+
+
 # -- sea --------------------------------------------------------------------
 
 def test_a_sea_point_resolves_to_a_chain_an_mrgid_and_a_province(geocoder):

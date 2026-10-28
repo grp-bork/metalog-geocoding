@@ -45,6 +45,11 @@ class FallbackGeocoder:
         # Initialize geodesic distance calculator (WGS84)
         self.geod = Geod(ellps='WGS84')
 
+        # Validity of each sea polygon, by index label, computed on first use.
+        # A GEOS validity check of a large IHO polygon takes ~0.25 s, and the
+        # layer never changes after loading.
+        self._sea_valid = {}
+
         # Build spatial index for fast land detection
         if hasattr(countries_gdf, 'sindex'):
             self.countries_sindex = countries_gdf.sindex
@@ -219,7 +224,11 @@ class FallbackGeocoder:
         if not isinstance(nearest_geom, BaseGeometry):
             return None
 
-        if nearest_geom.is_empty or not nearest_geom.is_valid:
+        if nearest_geom.is_empty:
+            return None
+        if min_idx not in self._sea_valid:
+            self._sea_valid[min_idx] = nearest_geom.is_valid
+        if not self._sea_valid[min_idx]:
             return None
 
         # Get nearest point on boundary
