@@ -62,8 +62,10 @@ metadata from `CITATION.cff`. The concept DOI
 the latest release.
 
 1. Bump `__version__` in `metalog_geocoding/__init__.py` and `version` in
-   `CITATION.cff` to the same value; commit and push, and wait for CI to pass.
-2. Tag and publish a GitHub release; Zenodo archives releases, not bare tags:
+   `CITATION.cff` to the same value, and retitle `Unreleased` in `CHANGELOG.md` to
+   that version and date; commit and push, and wait for CI to pass.
+2. Tag and publish a GitHub release, with that version's changelog section as the
+   release notes; Zenodo archives releases, not bare tags:
    `git tag -a vX.Y.Z -m "metalog-geocoding X.Y.Z" && git push origin vX.Y.Z && gh release create vX.Y.Z`
 3. Once Zenodo has archived it, look up the new version DOI on the Zenodo record and
    update the version and DOI in the example citation in the README's "Citation and

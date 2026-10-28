@@ -15,7 +15,7 @@ url: "https://github.com/grp-bork/metalog-geocoding"
 license: MIT
 # Concept DOI: always resolves to the latest release on Zenodo.
 doi: 10.5281/zenodo.23734816
-version: 0.1.0
+version: 0.2.0
 abstract: >-
   An offline reverse geocoder. Given a latitude and longitude it returns either
   a land location (continent, country, first-level administrative region;
