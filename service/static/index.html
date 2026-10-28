@@ -1,0 +1,100 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>metalog-geocoding</title>
+
+<!--
+  Browser form for the geocoding service; static, no build step. Leaflet and
+  the OpenStreetMap tiles are fetched by the browser, not the service: offline,
+  the map is blank and the tables still work.
+-->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="/static/style.css">
+
+<header>
+  <h1>metalog-geocoding</h1>
+  <span id="status" class="status">connecting&hellip;</span>
+</header>
+
+<main>
+  <form id="form" autocomplete="off">
+    <label for="coords">Coordinates <span class="hint">one per line</span></label>
+    <textarea id="coords" rows="8" spellcheck="false"
+              placeholder="-69.94&#9;-115.24&#10;54.32  10.13&#10;36.8, -76.0  Chesapeake Bay"></textarea>
+    <p class="hint">
+      Separated by tab, comma or spaces. Anything after the two numbers is
+      that row&rsquo;s own <code>geographic_location</code> and overrides the
+      field below. <code>#</code> starts a comment.
+    </p>
+
+    <label for="order">Order</label>
+    <select id="order">
+      <option value="latlon" selected>latitude, longitude</option>
+      <option value="lonlat">longitude, latitude</option>
+    </select>
+
+    <label for="type">Lookup</label>
+    <select id="type">
+      <option value="both" selected>land + sea (compare)</option>
+      <option value="auto">auto &mdash; from geographic location</option>
+      <option value="best">best (land or sea, one result)</option>
+      <option value="land">land</option>
+      <option value="sea">sea</option>
+    </select>
+    <p class="hint">
+      <code>auto</code> is what a batch <code>/check</code> does: a
+      <code>geographic_location</code> in the marine vocabulary is looked up
+      against IHO, everything else against Natural Earth.
+    </p>
+
+    <fieldset>
+      <legend>Sample fields <span class="hint">for <code>/check</code></span></legend>
+
+      <label for="geographic_location">geographic_location</label>
+      <input id="geographic_location" list="places" placeholder="e.g. Germany, Baltic Sea">
+      <datalist id="places"></datalist>
+
+      <label for="location_resolution">location_resolution</label>
+      <select id="location_resolution">
+        <option value="" selected>(none)</option>
+      </select>
+
+      <label for="artificial">artificial</label>
+      <input id="artificial" list="artificials" placeholder="(none)">
+      <datalist id="artificials"></datalist>
+      <p class="hint" id="artificial-hint"></p>
+    </fieldset>
+
+    <button type="submit" id="submit">Geocode</button>
+    <p class="hint">
+      Click the map to append a coordinate. Grading and
+      <code>location_hierarchy</code> rows need a
+      <code>geographic_location</code> &mdash; without one there is nothing
+      for the checker to compare against.
+    </p>
+  </form>
+
+  <section id="output">
+    <div id="map"></div>
+
+    <div id="error" class="error" hidden></div>
+
+    <h2>Geocode</h2>
+    <div class="tablewrap"><table id="results"></table></div>
+
+    <h2>Check</h2>
+    <div class="tablewrap"><table id="verdicts"></table></div>
+    <p id="check-note" class="hint"></p>
+
+    <h2>location_hierarchy</h2>
+    <div class="tablewrap"><table id="hierarchy"></table></div>
+
+    <details id="raw">
+      <summary>Raw responses</summary>
+      <pre id="rawjson"></pre>
+    </details>
+  </section>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/static/app.js"></script>

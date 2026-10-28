@@ -1,0 +1,12 @@
+id	latitude	longitude	geographic_location	location_resolution	artificial	note
+zurich-site	47.3769	8.5417	Switzerland	site		exact site, correct country: ok, full hierarchy
+bavaria-region	48.79	11.5	Germany	region		region centre, correct country: ok, full hierarchy
+tokyo-city	35.6762	139.6503	Japan	city		city, correct country: ok
+aloha-cruise	22.75	-158.0	North Pacific Ocean	site		marine station: ok, marine + longhurst hierarchy
+vienna-wrong	48.2082	16.3738	Germany	site		coordinate in Austria, labelled Germany: error
+france-country	46.6	2.2	France	country		country centroid: uncheckable, truncated hierarchy
+africa-continent	1.0	17.0	Africa	continent		continent centroid: uncheckable, continent only
+unknown-place	47.0	8.0	Switzerland	unknown		resolution unknown: no hierarchy
+lab-negctrl	50.11	8.68	Germany	site	negative control	control: no hierarchy rows
+lab-mock			Germany	country	mock	mock community, no coordinate: no hierarchy
+lab-culture	49.4	8.67	Germany	site	cultivation	cultivation is not in the no-location set: normal sample

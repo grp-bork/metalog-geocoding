@@ -1,0 +1,12 @@
+id	latitude	longitude	geographic_location	location_resolution	artificial	grade	code	reason	claim_type
+zurich-site	47.3769	8.5417	Switzerland	site		ok	ok		land
+bavaria-region	48.79	11.5	Germany	region		ok	ok		land
+tokyo-city	35.6762	139.6503	Japan	city		ok	ok		land
+aloha-cruise	22.75	-158.0	North Pacific Ocean	site		ok	ok		sea
+vienna-wrong	48.2082	16.3738	Germany	site		error	different_location	the sample states 'Germany', but the coordinate is inside 'Austria'; the nearest land called 'Germany' is 196 km away	land
+france-country	46.6	2.2	France	country		uncheckable	derived_coordinates	location_resolution is 'country', so the coordinates were derived from 'France' rather than observed and cannot contradict it	land
+africa-continent	1.0	17.0	Africa	continent		uncheckable	derived_coordinates	location_resolution is 'continent', so the coordinates were derived from 'Africa' rather than observed and cannot contradict it	land
+unknown-place	47.0	8.0	Switzerland	unknown		ok	ok		land
+lab-negctrl	50.11	8.68	Germany	site	negative control	ok	ok		land
+lab-mock			Germany	country	mock	no coordinates	no_coordinates		
+lab-culture	49.4	8.67	Germany	site	cultivation	ok	ok		land

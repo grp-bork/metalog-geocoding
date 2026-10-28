@@ -1,0 +1,9 @@
+latitude	longitude	geographic_location	note
+48.8566	2.3522	France	correct country
+54.5	3.0	North Sea	correct sea
+48.8566	2.3522	Australia	wrong country far away: error
+47.2	9.51	Switzerland	inside Liechtenstein, within 2 km of the Swiss border: ok
+54.5	3.0	Atlantic Ocean	sea claimed as an ancestor ocean
+-30	-140	North Sea	unrelated sea far away: error
+45.418	12.382	Italy	coastal water labelled with the country (fallback)
+48.8566	2.3522	North Sea	land point labelled with a sea: error

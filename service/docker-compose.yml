@@ -1,0 +1,47 @@
+# The geocoding service as a self-contained stack. Callers find it by URL
+# ($METALOG_GEOCODING_URL, see metalog_geocoding/client.py).
+#
+#   docker compose -f service/docker-compose.yml up -d
+#
+# Point the volumes at wherever the data lives on the host.
+
+services:
+
+  geocoding:
+    build:
+      # The image needs the whole repository, not just service/.
+      context: ..
+      dockerfile: service/Dockerfile
+    restart: always
+    ports:
+      # There is no authentication: if the host has a public interface, bind
+      # to an internal one explicitly (e.g. "10.0.0.5:8007:8007").
+      - "8007:8007"
+    volumes:
+      # The boundary-layer parquet. With :ro the sea layer cannot write its
+      # .pkl cache beside the parquet and re-reads the parquet on every start
+      # (slower boot, same answers); drop :ro to keep that cache.
+      - ${METALOG_GEOCODING_DATA:-../data}:/data:ro
+      # The SQLite result caches; writable, since new lookups are added here.
+      - ${METALOG_GEOCODING_CACHE:-../cache}:/cache
+      # Optional: override the bundled marine vocabulary and/or supply a
+      # location-exceptions file.
+      # - ./my_vocabulary:/vocab:ro
+    environment:
+      METALOG_GEOCODING_DATA: /data
+      METALOG_GEOCODING_CACHE_DIR: /cache
+      # METALOG_GEOCODING_MARINE_REGIONS: /vocab/marine_regions.txt
+      # METALOG_GEOCODING_SEA_ALIASES: /vocab/sea_aliases.tsv
+      # METALOG_GEOCODING_SEA_CONTAINMENT: /vocab/sea_containment.tsv
+      # METALOG_GEOCODING_LOCATION_EXCEPTIONS: /vocab/location_exceptions.tsv
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8007/health', timeout=25).status==200 else 1)"]
+      # Covers the layer load, which is slower on a cold filesystem or when
+      # the .pkl has to be rebuilt.
+      start_period: 60s
+      interval: 30s
+      # /health competes with a running batch for the GIL and was measured
+      # at 4-11 s under load, so allow 25 s in the probe and 30 s here.
+      timeout: 30s
+      retries: 3

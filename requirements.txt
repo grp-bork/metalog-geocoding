@@ -1,0 +1,6 @@
+# Standalone development install for this repo: the package itself, editable,
+# with every extra the scripts in `scripts/` need.
+#
+# A deployment that only geocodes needs `.[geo]`; `convert` is for
+# `scripts/download_data.py`, which reads the shapefiles and GeoJSON as shipped.
+-e .[geo,convert,scripts]

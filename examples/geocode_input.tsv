@@ -1,0 +1,9 @@
+latitude	longitude	note
+48.8566	2.3522	inland city (Paris): direct land hit
+-30	-140	open South Pacific: direct sea hit
+54.5	3.0	marginal sea (North Sea)
+45.418	12.382	Venice lagoon water just off the shore: needs a fallback
+19.5	-155.5	small island region (Hawaii)
+-80	0	Antarctica
+95	10	impossible latitude: error, no lookup
+		blank coordinate: passed through

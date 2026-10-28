@@ -1,0 +1,76 @@
+# Build the package and check that the base install works without the geo
+# stack. The boundary layers are not part of the distribution, so CI never
+# has them and the `geo` tests skip.
+
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  # The base install must import without the geo stack (`__init__.py` resolves
+  # the geocoder classes lazily). A stray top-level `import geopandas` breaks
+  # nothing on a machine that has geopandas, so this job runs where it is
+  # genuinely absent.
+  bare-install:
+    runs-on: ubuntu-latest
+    container: python:3.14-trixie
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install --quiet '.[test]'
+      - run: pytest -q -m "not geo"
+      # Checks the *installed distribution*; pytest runs against the source tree.
+      - name: Check the installed base distribution
+        run: |
+          python - <<'PY'
+          import importlib, sys
+
+          import metalog_geocoding as m
+
+          for name in ("geopandas", "shapely", "pyproj", "pandas", "numpy", "pyarrow"):
+              assert name not in sys.modules, f"{name} imported by the base install"
+
+          # The base surface has to be reachable, not merely importable.
+          m.GeoCache, m.round_coord, m.SeaHierarchyCache, m.data_dir
+          m.Sample, m.Verdict, m.distinct_coordinates, m.hierarchy_rows_for
+          m.MarineVocabulary, m.published_sea, m.expected_type, m.ATTRIBUTE_LEVEL
+          for mod in ("cache", "hierarchy", "paths", "country_aliases",
+                      "containment", "sea_relatedness", "geographic_overrides",
+                      "political_continents", "natural_earth_continents",
+                      "vocabulary", "hierarchy_table", "samples"):
+              importlib.import_module(f"metalog_geocoding.{mod}")
+
+          # A client of the geocoding service builds its request with these, so
+          # they have to work with nothing but the standard library installed.
+          s = [m.Sample(latitude="54.32", longitude="10.14"),
+               m.Sample(latitude="54.32", longitude="10.14"),
+               m.Sample(latitude="", longitude="")]
+          assert m.distinct_coordinates(s) == [(54.32, 10.14)], "client dedup broken"
+
+          # Asking for a geo name must raise an error that names the extra.
+          try:
+              m.LocationChecker
+          except ImportError as exc:
+              assert "[geo]" in str(exc), f"unhelpful error: {exc}"
+          else:
+              raise AssertionError("LocationChecker imported without the geo extra")
+
+          print("bare install OK:", m.__version__)
+          PY
+
+  # Checks that the extra installs from wheels on this image; a source build
+  # would show up as a job taking minutes instead of seconds.
+  geo-install:
+    runs-on: ubuntu-latest
+    container: python:3.14-trixie
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install --quiet '.[geo,test]'
+      - run: python -c "from metalog_geocoding import ReverseGeocoder; import pandas; print('geo OK, pandas', pandas.__version__)"
+      # The `geo` tests must skip, not error, without the boundary layers.
+      - run: pytest -q
+      - run: pip list --format=freeze
+
+# Releasing: `version` is read from `metalog_geocoding.__version__`, so bump
+# that, commit, tag.

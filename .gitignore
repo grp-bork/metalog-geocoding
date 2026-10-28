@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Packaging artefacts
+/build/
+/dist/
+*.egg-info/
+
+# Boundary layers (a directory or a symlink to one; see docs/installation-and-data.md)
+/data
+
+# Result caches, regenerated on first run. sea_hierarchy.tsv here holds only
+# chains fetched beyond the ones shipped in metalog_geocoding/vocab/.
+/cache/sea_hierarchy.tsv
+/cache/*.sqlite
+/cache/*.sqlite-*
+/cache/land_cache.tsv
+/cache/sea_cache.tsv
+/cache/*.pkl
+
+# Map layers from scripts/build_geojson.py
+/geojson/
+
+# Local secrets
+.env
+
+# Editors and OS
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Local assistant notes
+CLAUDE.md
+.claude/
+.remember/

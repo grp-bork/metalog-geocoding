@@ -1,0 +1,80 @@
+latitude	longitude	scheme	level	key	value
+-30.0	-140.0	coast	1	coast_continent	Oceania
+-30.0	-140.0	coast	2	coast_country	French Polynesia
+-30.0	-140.0	coast	3	coast_admin_1	Austral Islands
+-30.0	-140.0	coast	0	coast_adm1_code	PYF-4966
+-30.0	-140.0	coast	0	coast_country_code	PYF
+-30.0	-140.0	coast	0	coast_country_source	natural_earth
+-30.0	-140.0	coast	0	coast_distance_km	495.0
+-30.0	-140.0	coast	0	coast_flag	ok
+-30.0	-140.0	coast	0	coast_landmass_area_km2	42.6
+-30.0	-140.0	coast	0	coast_landmass_name	Rapa
+-30.0	-140.0	longhurst	1	biome	Westerlies
+-30.0	-140.0	longhurst	2	province	S. Pacific Subtropical Gyre Province
+-30.0	-140.0	longhurst	0	longhurst_code	SPSG
+-30.0	-140.0	marine	1	ocean	Pacific Ocean
+-30.0	-140.0	marine	2	sea	South Pacific Ocean
+-30.0	-140.0	marine	0	is_fallback	False
+-30.0	-140.0	marine	0	mrgid	1910
+45.418	12.382	admin	1	continent	Europe
+45.418	12.382	admin	2	country	Italy
+45.418	12.382	admin	3	admin_1	Venezia
+45.418	12.382	admin	0	adm1_code	ITA-5461
+45.418	12.382	admin	0	continent_political	Europe
+45.418	12.382	admin	0	country_code	ITA
+45.418	12.382	admin	0	fallback_distance_m	1000.0
+45.418	12.382	admin	0	is_fallback	True
+45.418	12.382	admin	0	iso_3166_2	IT-VE
+45.418	12.382	coast	0	coast_distance_km	0.1
+45.418	12.382	coast	0	coast_flag	ok
+45.418	12.382	coast	0	coast_landmass_area_km2	10.2
+45.418	12.382	coast	0	coast_landmass_name	Lazzaretto Vecchio
+45.418	12.382	coast	0	coast_mrgid	3314
+45.418	12.382	coast	0	coast_ocean	Mediterranean Sea
+45.418	12.382	coast	0	coast_sea	Adriatic Sea
+47.2	9.51	admin	1	continent	Europe
+47.2	9.51	admin	2	country	Liechtenstein
+47.2	9.51	admin	3	admin_1	Gamprin
+47.2	9.51	admin	0	adm1_code	LIE-4897
+47.2	9.51	admin	0	continent_political	Europe
+47.2	9.51	admin	0	country_code	LIE
+47.2	9.51	admin	0	is_fallback	False
+47.2	9.51	admin	0	iso_3166_2	LI-03
+47.2	9.51	coast	0	coast_distance_km	-285.4
+47.2	9.51	coast	0	coast_flag	ok
+47.2	9.51	coast	0	coast_landmass_area_km2	50700000.0
+47.2	9.51	coast	0	coast_landmass_name	Eurasia
+47.2	9.51	coast	0	coast_mrgid	3314
+47.2	9.51	coast	0	coast_ocean	Mediterranean Sea
+47.2	9.51	coast	0	coast_sea	Adriatic Sea
+48.8566	2.3522	admin	1	continent	Europe
+48.8566	2.3522	admin	2	country	France
+48.8566	2.3522	admin	3	admin_1	Paris
+48.8566	2.3522	admin	0	adm1_code	FRA-5333
+48.8566	2.3522	admin	0	continent_political	Europe
+48.8566	2.3522	admin	0	country_code	FRA
+48.8566	2.3522	admin	0	is_fallback	False
+48.8566	2.3522	admin	0	iso_3166_2	FR-75
+48.8566	2.3522	coast	0	coast_distance_km	-149.3
+48.8566	2.3522	coast	0	coast_flag	ok
+48.8566	2.3522	coast	0	coast_landmass_area_km2	50700000.0
+48.8566	2.3522	coast	0	coast_landmass_name	Eurasia
+48.8566	2.3522	coast	0	coast_mrgid	2389
+48.8566	2.3522	coast	0	coast_ocean	Atlantic Ocean
+48.8566	2.3522	coast	0	coast_sea	English Channel
+54.5	3.0	coast	1	coast_continent	Europe
+54.5	3.0	coast	2	coast_country	Netherlands
+54.5	3.0	coast	0	coast_country_code	NLD
+54.5	3.0	coast	0	coast_country_source	natural_earth
+54.5	3.0	coast	0	coast_distance_km	187.3
+54.5	3.0	coast	0	coast_flag	ok
+54.5	3.0	coast	0	coast_landmass_area_km2	35.7
+54.5	3.0	coast	0	coast_landmass_name	Vlieland
+54.5	3.0	longhurst	1	biome	Coastal
+54.5	3.0	longhurst	2	province	NE Atlantic Shelves Province
+54.5	3.0	longhurst	0	longhurst_code	NECS
+54.5	3.0	marine	1	ocean	Atlantic Ocean
+54.5	3.0	marine	2	basin	North Atlantic Ocean
+54.5	3.0	marine	3	sea	North Sea
+54.5	3.0	marine	0	is_fallback	False
+54.5	3.0	marine	0	mrgid	2350

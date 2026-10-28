@@ -1,0 +1,9 @@
+id	latitude	longitude	geographic_location	grade	code	reason	claim_type
+1	48.8566	2.3522	France	ok	ok		land
+2	54.5	3.0	North Sea	ok	ok		sea
+3	48.8566	2.3522	Australia	error	different_location	the sample states 'Australia', but the coordinate is inside 'France'; the nearest land called 'Australia' is 13,383 km away	land
+4	47.2	9.51	Switzerland	ok	ok	the coordinate is inside 'Liechtenstein', but 'Switzerland' is only 2 km away: a border, not a different place	land
+5	54.5	3.0	Atlantic Ocean	ok	ok		sea
+6	-30	-140	North Sea	error	unrelated_sea	the sample states the sea 'North Sea', but the coordinate is in 'South Pacific Ocean' -- different water, not a wider or narrower name for the same water: neither contains the other in the IHO hierarchy	sea
+7	45.418	12.382	Italy	ok	ok		land
+8	48.8566	2.3522	North Sea	error	not_on_sea	the sample states the sea 'North Sea', but the coordinate is not in any IHO sea, nor within 10 km of one	sea
