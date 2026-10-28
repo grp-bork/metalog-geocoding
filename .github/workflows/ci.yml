@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     container: python:3.14-trixie
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: pip install --quiet '.[test]'
       - run: pytest -q -m "not geo"
       # Checks the *installed distribution*; pytest runs against the source tree.
@@ -65,7 +65,7 @@ jobs:
     runs-on: ubuntu-latest
     container: python:3.14-trixie
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: pip install --quiet '.[geo,test]'
       - run: python -c "from metalog_geocoding import ReverseGeocoder; import pandas; print('geo OK, pandas', pandas.__version__)"
       # The `geo` tests must skip, not error, without the boundary layers.
