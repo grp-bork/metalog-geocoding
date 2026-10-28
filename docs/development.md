@@ -51,6 +51,23 @@ start-up that they still express every IHO area.
 - `geo-install`: installs `.[geo]` on `python:3.14-trixie` and prints the resolve, so a
   dependency that stops shipping a wheel for the target Python is noticed before the
   build silently starts compiling.
+- `citation`: validates `CITATION.cff` with `cffconvert --validate`; GitHub and Zenodo
+  silently ignore an invalid file.
+
+## Releasing
+
+Each GitHub release is archived on Zenodo, which mints a version DOI and reads its
+metadata from `CITATION.cff`. The concept DOI
+[10.5281/zenodo.23734816](https://doi.org/10.5281/zenodo.23734816) always resolves to
+the latest release.
+
+1. Bump `__version__` in `metalog_geocoding/__init__.py` and `version` in
+   `CITATION.cff` to the same value; commit and push, and wait for CI to pass.
+2. Tag and publish a GitHub release; Zenodo archives releases, not bare tags:
+   `git tag -a vX.Y.Z -m "metalog-geocoding X.Y.Z" && git push origin vX.Y.Z && gh release create vX.Y.Z`
+3. Once Zenodo has archived it, look up the new version DOI on the Zenodo record and
+   update the version and DOI in the example citation in the README's "Citation and
+   attribution" section; commit and push.
 
 ## Package layout
 

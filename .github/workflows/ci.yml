@@ -81,6 +81,4 @@ jobs:
       - run: pip install --quiet cffconvert
       - run: cffconvert --validate
 
-# Releasing: `version` is read from `metalog_geocoding.__version__`, so bump
-# that and `version` in CITATION.cff, commit, tag, then publish a GitHub release
-# (Zenodo archives releases, not bare tags).
+# Releasing: see "Releasing" in docs/development.md.
