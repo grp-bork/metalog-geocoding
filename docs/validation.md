@@ -42,8 +42,9 @@ sample and may be reworded.
   message asks whether latitude and longitude are swapped.
 - The point is not on land or sea at all (neither within the fallback threshold).
 - Direct hit on a different country, and the claimed country is more than
-  `CLAIM_BORDER_M` (2 km) away (`different_location`), or the claimed name is
-  not one Natural Earth maps at all (`unknown_place`).
+  `CLAIM_BORDER_M` (2 km) away (`different_location`).
+- A land claim that names no country or territory Natural Earth maps
+  (`unknown_place`), whether the point is a direct hit or a shoreline fallback.
 - Shoreline fallback resolved it, but the claimed country is more than `CLAIM_NEAR_M`
   (100 km) away.
 - The claimed sea and the geocoded sea are unrelated in the IHO hierarchy.
@@ -55,8 +56,10 @@ nearest Natural Earth unit *belonging to* the claimed country (matched through
 `country_aliases`). A country is not one polygon: Natural Earth splits out Curaçao,
 Aruba and the Indian Ocean Territories, so measuring only to the unit carrying the
 name asks how far the mainland is. It returns `None` for a name Natural Earth has
-no unit for (a misspelling, an island, any sea name). On a shoreline fallback the
-grade is then left alone; on a direct hit it is `unknown_place`.
+no unit for (a misspelling, an island, any sea name). For a land claim that is
+`unknown_place`, on a direct hit and on a shoreline fallback alike: the name is the
+problem, and the verdict must not depend on which side of the coastline the point
+falls.
 
 Territories that Natural Earth folds into a larger unit (Svalbard into Norway,
 French Guiana into France, Christmas and Cocos Islands into one Indian Ocean

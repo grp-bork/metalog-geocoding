@@ -442,7 +442,7 @@ fail-closed client must not treat it as a pass.
 | `unrelated_sea` | `error` | A sea is claimed and a different sea found, and the two are unrelated in the IHO/MarineRegions hierarchy (neither is an ancestor of the other). |
 | `claim_too_far` | `error` | The point resolved only by a shoreline fallback, and the claimed country is more than 100 km away. |
 | `different_location` | `error` | A direct hit in a different country from the claim, with the claimed country more than 2 km away. Borders are lines with their own error, so a point within 2 km of the claimed country passes. A territory Natural Earth folds into a larger unit (Svalbard, French Guiana, ...) is compared with its own polygon, so a Svalbard claim near Oslo lands here too. |
-| `unknown_place` | `error` | A direct hit, and the claimed land name is not a country or territory Natural Earth maps (a misspelling, an island, a region), so no coordinate could match it. Fix the name, not the coordinate. |
+| `unknown_place` | `error` | The claimed land name (or no name at all) is not a country or territory Natural Earth maps (a misspelling, an island, a region), so no coordinate could match it, whether the point is inside a country or just off a coast. Fix the name (or add an alias), not the coordinate. |
 
 The library exposes these as `CODE_*` constants in `metalog_geocoding/samples.py`
 (`ERROR_CODES` lists the seven error codes). A client may see codes added in

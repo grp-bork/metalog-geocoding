@@ -454,6 +454,29 @@ class LocationChecker:
             # MRGID missing from the hierarchy cache). No opinion, so fall
             # through to the generic paths below.
 
+        # Natural Earth has no unit or territory of that name, so no coordinate
+        # could match it: a problem with the name, not with the coordinate.
+        # Decided before the fallback branch so that the verdict does not
+        # depend on which side of the coastline the point falls.
+        if (
+            loc_type == "land"
+            and self.claims is not None
+            and self.claim_distance(expected, sample) is None
+        ):
+            if result.get("is_fallback"):
+                where = f"the land nearest the coordinate is {_named(found)}"
+            else:
+                where = f"the coordinate is inside {_named(found)}"
+            if not sample.geographic_location:
+                return "error", CODE_UNKNOWN_PLACE, (
+                    f"the sample states no location, so the coordinate has "
+                    f"nothing to agree with; {where}"
+                )
+            return "error", CODE_UNKNOWN_PLACE, (
+                f"the sample states {stated}, which is not a country or territory "
+                f"that Natural Earth maps, so no coordinate can match it; {where}"
+            )
+
         if result.get("is_fallback"):
             # A fallback names the *nearest* unit, not one the point is in, so
             # only the claim is tested: reject when the claimed country is far
@@ -479,8 +502,7 @@ class LocationChecker:
                     )
                 )
 
-            # The claim is near the point, or Natural Earth cannot place the
-            # name. Neither is evidence against the sample.
+            # The claim is near the point: not evidence against the sample.
             return "ok", CODE_OK, ""
 
         # A direct hit is evidence against the claim, unless the claimed
@@ -497,19 +519,12 @@ class LocationChecker:
                 f"{_distance(border_distance)} away: a border, not a different place"
             )
 
-        # Natural Earth has no unit or territory of that name, so no coordinate
-        # could match it: a problem with the name, not with the coordinate.
-        if loc_type == "land" and self.claims is not None and border_distance is None:
-            return "error", CODE_UNKNOWN_PLACE, (
-                f"the sample states {stated}, which is not a country or territory "
-                f"that Natural Earth maps, so no coordinate can match it; the "
-                f"coordinate is inside {_named(found)}"
-            )
-
         # Name both places and the distance between them: 14 km suggests a
         # misplaced site, 9,000 km a scrambled column.
         detail = ""
-        if loc_type == "land" and self.claims is not None:
+        # border_distance is None only for a name Natural Earth knows solely as
+        # a sovereign of other units (e.g. Kashmir).
+        if loc_type == "land" and border_distance is not None:
             detail = (
                 f"; the nearest land called {stated} is "
                 f"{_distance(border_distance)} away"

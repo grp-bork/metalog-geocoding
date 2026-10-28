@@ -272,6 +272,16 @@ def test_a_name_natural_earth_cannot_place_has_its_own_code(checker):
     assert "Atlantis" in verdict.reason and "United States" in verdict.reason
 
 
+def test_an_unknown_name_fails_on_either_side_of_the_coastline(checker):
+    """Iriomote (an island of Japan): one point inside Natural Earth's Japan,
+    one 1 km off its coastline. The name is unknown either way, so the verdict
+    must not depend on the shoreline fallback."""
+    assert check(checker, 24.3, 123.8, "Iriomote").code == CODE_UNKNOWN_PLACE
+    offshore = check(checker, 24.407, 123.799, "Iriomote")
+    assert offshore.result["is_fallback"]
+    assert offshore.code == CODE_UNKNOWN_PLACE
+
+
 def test_a_territory_is_checked_against_its_own_polygon(checker):
     """Svalbard is inside Natural Earth's Norway unit, but a Svalbard sample
     near Oslo is a wrong coordinate, and one in the US is a known name far
