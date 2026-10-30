@@ -44,7 +44,15 @@ from metalog_geocoding.hierarchy_table import (
 )
 from metalog_geocoding.land import COUNTRY_NAME_OVERRIDES
 from metalog_geocoding.coast import COAST_SOURCE
+from metalog_geocoding.nominatim import NominatimClient, PlaceCache
+from metalog_geocoding.wikidata import WikidataClient
 from metalog_geocoding.paths import data_dir
+from metalog_geocoding.places import (
+    OSM_ATTRIBUTION,
+    STATUS_RESOLVED,
+    LookupBudget,
+    PlaceResolver,
+)
 from metalog_geocoding.sea_relatedness import load_containment
 from metalog_geocoding.vocabulary import load_marine_vocabulary
 
@@ -79,6 +87,30 @@ print(
     f"location_exceptions={len(EXCEPTIONS) if EXCEPTIONS else 0}",
     file=sys.stderr,
 )
+
+# /place-distance: the boundary layers above, then Wikidata and Nominatim.
+# Online lookups run outside _LOCK (each client has its own rate lock), so a
+# slow one never holds up /check.
+_PLACE_CACHE = PlaceCache(CONFIG.cache_dir / "place_cache.sqlite")
+_USER_AGENT = (
+    f"metalog-geocoding/{metalog_geocoding.__version__} "
+    f"(+https://github.com/grp-bork/metalog-geocoding)"
+)
+NOMINATIM = (
+    NominatimClient(_PLACE_CACHE, url=CONFIG.nominatim_url, user_agent=_USER_AGENT)
+    if CONFIG.nominatim_url
+    else None
+)
+WIKIDATA = (
+    WikidataClient(_PLACE_CACHE, url=CONFIG.wikidata_url, user_agent=_USER_AGENT)
+    if CONFIG.wikidata_url
+    else None
+)
+PLACES = PlaceResolver(GEOCODER, MARINE, NOMINATIM, WIKIDATA)
+
+#: Cap on one /place-distance call, so a request cannot pin a worker thread.
+MAX_PLACES_PER_REQUEST = 1000
+MAX_COORDINATES_PER_PLACE = 64
 
 # Serialises geocoding and cache saves across threads within the one worker;
 # the geocoder and its SQLite connections are shared, not thread-safe.
@@ -245,6 +277,88 @@ def create_app() -> Flask:
                 GEOCODER.save_caches()
 
         return jsonify({"results": results})
+
+    @app.post("/place-distance")
+    def place_distance():
+        """Distance from each candidate coordinate to each place a name may be.
+
+        Body: ``{"places": [{"name": str, "coordinates": [[lat, lon], ...],
+        "country": optional ISO alpha-2}]}``. See docs/api.md.
+        """
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict):
+            return _bad_request("request body must be a JSON object")
+        places_in = payload.get("places")
+        if not isinstance(places_in, list):
+            return _bad_request("missing or non-array 'places' key")
+        if len(places_in) > MAX_PLACES_PER_REQUEST:
+            return _bad_request(
+                f"at most {MAX_PLACES_PER_REQUEST} places per request, got {len(places_in)}"
+            )
+
+        parsed = []
+        for i, raw in enumerate(places_in):
+            if not isinstance(raw, dict):
+                return _bad_request(f"places[{i}] must be an object")
+            name = raw.get("name")
+            if not isinstance(name, str):
+                return _bad_request(f"places[{i}] is missing a string 'name'")
+            country = raw.get("country")
+            if country is not None and not (
+                isinstance(country, str) and len(country) == 2 and country.isalpha()
+            ):
+                return _bad_request(
+                    f"places[{i}]: 'country' must be an ISO 3166-1 alpha-2 code, got {country!r}"
+                )
+            coordinates = raw.get("coordinates")
+            if not isinstance(coordinates, list):
+                return _bad_request(f"places[{i}] is missing a 'coordinates' array")
+            if len(coordinates) > MAX_COORDINATES_PER_PLACE:
+                return _bad_request(
+                    f"places[{i}]: at most {MAX_COORDINATES_PER_PLACE} coordinates per place"
+                )
+            coords, coord_error = _parse_coordinates(coordinates)
+            if coord_error:
+                return _bad_request(f"places[{i}]: {coord_error}")
+            parsed.append((name, country, coords))
+
+        budget = LookupBudget(CONFIG.place_lookups)
+        out = []
+        for name, country, coords in parsed:
+            resolution = PLACES.resolve(name, country, budget)
+            entry = {
+                "name": name,
+                "status": resolution.status,
+                "interpreted_as": resolution.interpreted_as,
+                "message": resolution.message,
+                "candidates": [],
+                "min_distance_m": [None] * len(coords),
+            }
+            if resolution.status == STATUS_RESOLVED:
+                # An impossible coordinate has no distance; the others do.
+                valid = [coordinate_error(lat, lon) is None for lat, lon in coords]
+                for candidate in resolution.candidates:
+                    distances = [
+                        round(candidate.distance_m(lat, lon), 1) if ok else None
+                        for (lat, lon), ok in zip(coords, valid)
+                    ]
+                    entry["candidates"].append(
+                        {**candidate.as_dict(), "distances_m": distances}
+                    )
+                    entry["min_distance_m"] = [
+                        d if best is None or (d is not None and d < best) else best
+                        for best, d in zip(entry["min_distance_m"], distances)
+                    ]
+            out.append(entry)
+
+        response = {"places": out}
+        if any(
+            c["source"] == "osm" or "relation/" in c["id"] or "way/" in c["id"]
+            for p in out
+            for c in p["candidates"]
+        ):
+            response["attribution"] = OSM_ATTRIBUTION
+        return jsonify(response)
 
     @app.get("/health")
     def health():

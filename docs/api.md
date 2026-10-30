@@ -20,7 +20,7 @@ bundled marine vocabulary (see [Vocabulary](#vocabulary)).
 ## Contents
 
 1. [Overview and configuration](#overview-and-configuration)
-2. [Endpoints](#endpoints): `GET /health`, `POST /check`, `POST /geocode`, `GET /options`, `GET /`
+2. [Endpoints](#endpoints): `GET /health`, `POST /check`, `POST /geocode`, `POST /place-distance`, `GET /options`, `GET /`
 3. [Errors and status codes](#errors-and-status-codes)
 4. [Grades and codes](#grades-and-codes)
 5. [The location_hierarchy rows](#the-location_hierarchy-rows)
@@ -56,6 +56,9 @@ All configuration is by environment variable, read once at start-up.
 | `METALOG_GEOCODING_SEA_ALIASES` | bundled `vocab/sea_aliases.tsv` | Other spellings of vocabulary names. |
 | `METALOG_GEOCODING_SEA_CONTAINMENT` | bundled `vocab/sea_containment.tsv` | Seas with no IHO polygon and the IHO sea that contains them. |
 | `METALOG_GEOCODING_LOCATION_EXCEPTIONS` | none | Optional: `(latitude, longitude, geographic_location)` triples, verified by hand, accepted despite an `error` grade. Opt-in; there is no bundled file. |
+| `METALOG_GEOCODING_NOMINATIM_URL` | `https://nominatim.openstreetmap.org/search` | Search endpoint `/place-distance` falls back to. Empty string: no online lookups, names resolve from the boundary layers only. |
+| `METALOG_GEOCODING_WIKIDATA_URL` | `https://www.wikidata.org/w/api.php` | Wikidata API that `/place-distance` uses to decide which place a name means. Empty string: no Wikidata. |
+| `METALOG_GEOCODING_PLACE_LOOKUPS_PER_REQUEST` | `20` | Online requests (Wikidata and Nominatim) one `/place-distance` call may make. A new name costs up to four. Cache hits are free; names past the budget come back `pending`. |
 | `METALOG_GEOCODING_HOST` | `0.0.0.0` | Bind address; used only by `python service/app.py` (dev entry point). |
 | `METALOG_GEOCODING_PORT` | `8007` | Port; used only by `python service/app.py`. Under gunicorn the Dockerfile binds `0.0.0.0:8007` directly. |
 
@@ -333,6 +336,102 @@ The raw `result` is the geocoder's internal shape and is less tightly specified
 than the `/check` response; for a stable, flattened view use the
 `location_hierarchy` rows from `/check`.
 
+### `POST /place-distance`
+
+How far each of several coordinates is from a named place. Built for
+coordinate repair: send a sample's place name with the candidate fixes of its
+coordinate (latitude and longitude swapped, signs flipped) and see which fix
+lands in the place. Choosing the fix is the caller's decision; this endpoint
+only measures. How names resolve, and how well, is explained in
+[place-distance.md](place-distance.md).
+
+Request:
+
+```json
+{"places": [
+  {"name": "Disko Bay", "country": "GL",
+   "coordinates": [[69.2, -52.1], [-52.1, 69.2], [-69.2, 52.1]]}
+]}
+```
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `name` | string | The place name as the metadata states it. |
+| `coordinates` | array of `[lat, lon]` | Up to 64 per place. An impossible one (latitude outside ±90) gets `null` distances. |
+| `country` | string, optional | ISO 3166-1 alpha-2. Narrows admin-1 units and Nominatim to that country; country and sea names are not narrowed. |
+
+At most 1,000 places per request.
+
+**How a name resolves.** The name is read several ways, most literal first:
+as written, without a trailing parenthetical, a country adjective as its
+country (`Chilean` → `Chile`), without a leading compass qualifier
+(`Southern Spain` → `Spain`), and `X, Y` as `X`. A bare country adjective
+is read as its country first (`Spanish` is Spain, not Spanish, Ontario);
+otherwise the literal name is tried before any stripped one, so `Western
+Australia` is the state. For each reading in turn:
+
+1. **The boundary layers** the service already holds: Natural Earth
+   countries and territories, admin-1 units of that name, IHO seas and
+   oceans with every sea in their chain. A two-letter code is a country
+   (`ES`), and in the US, Canada and Australia also a state (`CA` is Canada
+   and California).
+2. **Wikidata** decides which place the name means. Items count if their
+   label or an English alias is the name, they have a coordinate, and their
+   description is not of a non-place (a language, university, album, ...).
+   They are ranked by sitelinks, the number of Wikipedia pages about them
+   (`Melbourne` is Victoria, not Florida; `Andes` the range, not a town in
+   Colombia); up to three with at least half the top item's sitelinks are
+   candidates. Each item's geometry is, in order: the Natural Earth country,
+   admin-1 unit, geography region (ranges, deserts, plateaus) or marine
+   area (bays, gulfs, straits, small seas) carrying its QID (the last two
+   need the optional layers, see
+   [installation-and-data.md](installation-and-data.md)); a boundary layer
+   under its label (`Atlantic` → IHO's Atlantic Ocean); the OSM relation it
+   links to; a Nominatim result of that name within 25 km of it; else its
+   point.
+3. **Nominatim** alone, if Wikidata found nothing.
+
+The first reading that finds anything wins, and `interpreted_as` says which.
+
+Response, one entry per place in request order:
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `name` | string | As sent. |
+| `status` | string | `resolved`; `unresolved` (nothing found under any reading); `pending` (needs a Nominatim lookup this request had no budget for: send it again); `lookup_failed` (Nominatim unreachable: send it again later). Only `resolved` carries candidates. An unresolved name is no evidence about a coordinate. |
+| `interpreted_as` | string or null | The reading that resolved. |
+| `message` | string or null | Why a name did not resolve. |
+| `candidates` | array | Every place the name may be. Ambiguous names have several (`Georgia`: the country and the US state). |
+| `candidates[].source` | string | `natural_earth_admin0`, `natural_earth_admin1`, `natural_earth_region`, `natural_earth_marine`, `iho`, `wikidata` or `osm`. |
+| `candidates[].id` | string | Natural Earth `ADM0_A3` or `adm1_code`, IHO MRGID (the name, for an ocean assembled from several polygons), OSM `type/id`, or a Wikidata QID followed by the OSM feature that gave its outline, if any (`Q14422 (relation/1234)`). |
+| `candidates[].label`, `kind` | string | Display name, and what it is (`country`, `state`, `sea`, OSM `category:type`). |
+| `candidates[].geometry` | string | `polygon`, `line` or `point`: what the distance is measured to. A point is a label position, so a small distance to it is weaker evidence than being inside a polygon. |
+| `candidates[].area_km2` | number or null | Geodesic area of a polygon. How much a hit is worth: inside a 20,000 km² bay is strong, inside an ocean is not. |
+| `candidates[].country_code` | string or null | Alpha-3, as `/geocode` publishes it; null for OSM places. |
+| `candidates[].distances_m` | array | Geodesic metres from each coordinate to the candidate, `0` inside a polygon. |
+| `min_distance_m` | array | Per coordinate, the smallest distance over all candidates. |
+| `attribution` | string | Present when any candidate comes from OpenStreetMap. |
+
+Wikidata and Nominatim answers are cached in `place_cache.sqlite` in the
+cache directory, "nothing found" included (retried after 90 days); a failure
+is never cached. Requests to each are spaced 1.1 s apart across all threads
+of the process, as Nominatim's usage policy requires, so run online lookups
+in **one** instance:
+independent containers would each keep their own pace.
+
+Nominatim matches fragments of a query and ranks loosely, so its answers are
+filtered before they become candidates. A result is kept only if it is a
+place (administrative and protected-area boundaries, `place`, `natural`,
+water and waterways, nature-related land use, nature reserves and parks,
+research institutes; never a restaurant, shop, street or building), and one
+of its names in any language has the same distinctive words as the reading
+(feature words such as *lake*, *desert*, *bay* aside: `Atacama Desert` is
+`Desierto de Atacama`, but `Africa` is not `South Africa`). Results less than
+a fifth as important as the best are dropped (Lake Erie, not also a pond of
+that name in Nigeria). Without these, `Chilean` was a car-rental desk and
+`Northern Baffin Bay` a shop. The same name test applies to Wikidata hits. Online
+lookups do not take the geocoding lock, so they never hold up `/check`.
+
 ### `GET /options`
 
 The vocabularies the browser form offers, served so that clients need not copy
@@ -404,6 +503,7 @@ Three outcomes are deliberately distinct, and clients must not conflate them:
 | `samples[i] ('id'): 'coord' must be an integer index` | `/check` only. |
 | `samples[i] ('id'): coord index N is out of range for M coordinates` | `/check` only. |
 | `'type' must be one of auto, best, land, sea, both, got ...` | `/geocode` only. |
+| `missing or non-array 'places' key`, `places[i] ...` | `/place-distance` only: a place that is not an object, lacks a string `name` or a `coordinates` array, has a `country` that is not two letters, or too many places or coordinates. |
 
 Other statuses: `404` for an unknown path and `405` for a wrong method are
 Flask's default HTML pages, not JSON. An unexpected internal exception yields

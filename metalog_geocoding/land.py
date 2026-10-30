@@ -94,6 +94,7 @@ ADM0_COLUMNS = [
     "CONTINENT",    # continent_political base; Seven-seas/blank-continent validation
     "ISO_A3_EH",    # country_code
     "SOVEREIGNT",   # claims.py: dependency-aware claim matching
+    "WIKIDATAID",   # places.py: the outline of a Wikidata item
     "geometry",
 ]
 
@@ -106,6 +107,8 @@ ADM1_COLUMNS = [
     "name_en",      # name_1 fallback
     "type_en",      # type_1
     "type",         # type_1 fallback
+    "postal",       # places.py: two-letter state codes (CA, BC, NSW is not one)
+    "wikidataid",   # places.py: the outline of a Wikidata item
     "geometry",
 ]
 

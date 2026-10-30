@@ -8,6 +8,8 @@ service/README.md for the full list.
 import os
 from pathlib import Path
 
+from metalog_geocoding.nominatim import DEFAULT_URL as DEFAULT_NOMINATIM_URL
+from metalog_geocoding.wikidata import DEFAULT_URL as DEFAULT_WIKIDATA_URL
 from metalog_geocoding.vocabulary import (
     BUNDLED_MARINE_REGIONS,
     BUNDLED_SEA_ALIASES,
@@ -35,6 +37,21 @@ DEFAULT_MARINE_REGIONS = BUNDLED_MARINE_REGIONS
 DEFAULT_SEA_ALIASES = BUNDLED_SEA_ALIASES
 DEFAULT_SEA_CONTAINMENT = BUNDLED_SEA_CONTAINMENT
 DEFAULT_LOCATION_EXCEPTIONS = None
+
+#: Nominatim search endpoint for /place-distance. Empty string: no online
+#: lookups, so names resolve from the boundary layers only.
+NOMINATIM_URL_ENV = "METALOG_GEOCODING_NOMINATIM_URL"
+
+#: Wikidata API endpoint for /place-distance, which picks the place a name
+#: means before OSM supplies its outline. Empty string: no Wikidata.
+WIKIDATA_URL_ENV = "METALOG_GEOCODING_WIKIDATA_URL"
+
+#: Online requests (Wikidata and Nominatim) one /place-distance call may make (cache hits are free).
+#: At one request per second this bounds a call's latency; names past it come
+#: back "pending". Run one instance with online lookups: the rate limit is per
+#: process, and Nominatim's policy is per application.
+PLACE_LOOKUPS_ENV = "METALOG_GEOCODING_PLACE_LOOKUPS_PER_REQUEST"
+DEFAULT_PLACE_LOOKUPS = 20
 
 
 def _optional_vocab_path(env_name: str, default: Path | None) -> Path | None:
@@ -72,6 +89,9 @@ class Config:
         self.location_exceptions = _optional_vocab_path(
             LOCATION_EXCEPTIONS_ENV, DEFAULT_LOCATION_EXCEPTIONS
         )
+        self.nominatim_url = os.environ.get(NOMINATIM_URL_ENV, DEFAULT_NOMINATIM_URL)
+        self.wikidata_url = os.environ.get(WIKIDATA_URL_ENV, DEFAULT_WIKIDATA_URL)
+        self.place_lookups = int(os.environ.get(PLACE_LOOKUPS_ENV, DEFAULT_PLACE_LOOKUPS))
 
     def __repr__(self):
         return (
@@ -79,5 +99,8 @@ class Config:
             f"marine_regions={self.marine_regions}, "
             f"sea_aliases={self.sea_aliases}, "
             f"sea_containment={self.sea_containment}, "
-            f"location_exceptions={self.location_exceptions})"
+            f"location_exceptions={self.location_exceptions}, "
+            f"nominatim_url={self.nominatim_url or 'off'}, "
+            f"wikidata_url={self.wikidata_url or 'off'}, "
+            f"place_lookups={self.place_lookups})"
         )

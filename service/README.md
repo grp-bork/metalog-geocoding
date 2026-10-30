@@ -130,6 +130,9 @@ response changes additive, so hand-written clients that read keys with
 | `METALOG_GEOCODING_SEA_ALIASES` | bundled `vocab/sea_aliases.tsv` | Other spellings of vocabulary sea names. Same rules. |
 | `METALOG_GEOCODING_SEA_CONTAINMENT` | bundled `vocab/sea_containment.tsv` | Seas IHO has no polygon for, mapped to the IHO sea containing them. Same rules. |
 | `METALOG_GEOCODING_LOCATION_EXCEPTIONS` | none | Coordinates verified by hand where Natural Earth has no polygon for the ground. `GET /health` reports the entry count. |
+| `METALOG_GEOCODING_NOMINATIM_URL` | OSM's public Nominatim | Search endpoint for `/place-distance`. Empty: boundary layers only. Lookups are paced at one per 1.1 s per process, so enable it in one instance only. |
+| `METALOG_GEOCODING_WIKIDATA_URL` | Wikidata's API | Decides which place a name means for `/place-distance`. Empty: no Wikidata. Paced like Nominatim. |
+| `METALOG_GEOCODING_PLACE_LOOKUPS_PER_REQUEST` | `20` | Online requests per `/place-distance` call; names past it come back `pending`. |
 | `METALOG_GEOCODING_HOST` | `0.0.0.0` | Dev server bind host (gunicorn uses `--bind`). |
 | `METALOG_GEOCODING_PORT` | `8007` | Dev server bind port. |
 

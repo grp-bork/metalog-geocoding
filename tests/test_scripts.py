@@ -1,4 +1,4 @@
-"""Argument and column handling of scripts/geocode.py and scripts/check.py.
+"""Argument and column handling of scripts/geocode.py, scripts/check.py and scripts/evaluate_places.py.
 
 Stdlib only: nothing here loads a layer. The scripts import the geo stack
 inside main(), after argument parsing, which is what makes this possible.
@@ -62,3 +62,16 @@ def test_check_defaults_id_to_the_row_number(tmp_path):
     _, _, samples = check.read_samples(path)
     assert [s.id for s in samples] == ["1", "2"]
     assert all(s.location_resolution == "" and s.artificial == "" for s in samples)
+
+
+def test_evaluate_places_reads_distinct_names_in_order(tmp_path):
+    evaluate = _script("evaluate_places")
+    names = tmp_path / "names.txt"
+    names.write_text("Disko Bay\n\n# a comment\nLake Zug\nDisko Bay\n  Andes  \n", encoding="utf-8")
+    assert evaluate.read_names(names) == ["Disko Bay", "Lake Zug", "Andes"]
+
+
+def test_evaluate_places_offline_flag_parses():
+    evaluate = _script("evaluate_places")
+    args = evaluate.build_parser().parse_args(["n.txt", "out.tsv", "--offline", "--no-wikidata"])
+    assert args.offline and args.no_wikidata and not args.no_nominatim

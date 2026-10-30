@@ -58,6 +58,8 @@ class Source:
     #: The file(s) made from it, in the data directory. Once all of them
     #: exist the download may be deleted, so it counts as present.
     outputs: tuple[str, ...]
+    #: A missing optional download is reported but does not stop the setup.
+    optional: bool = False
 
 
 SOURCES = [
@@ -81,7 +83,16 @@ SOURCES = [
         "Download the 'Geography Regions' polygons zip (Physical vectors, Labels) "
         "and extract it into DOWNLOADS/.",
         Path("ne_10m_geography_regions_polys.shp"),
-        ("GSHHS_f_names.parquet",),
+        ("GSHHS_f_names.parquet", "ne_10m_geography_regions_polys.parquet"),
+    ),
+    Source(
+        "Natural Earth 10m Marine Areas (physical, optional)",
+        NE_PHYSICAL,
+        "Download the 'Marine Areas' polygons zip (Physical vectors, Labels) "
+        "and extract it into DOWNLOADS/.",
+        Path("ne_10m_geography_marine_polys.shp"),
+        ("ne_10m_geography_marine_polys.parquet",),
+        optional=True,
     ),
     Source(
         "MarineRegions IHO Sea Areas v3",
@@ -128,6 +139,9 @@ CONVERSIONS = {
     Path("ne_10m_admin_1_states_provinces.shp"): "ne_10m_admin_1_states_provinces.parquet",
     Path("World_Seas_IHO_v3.shp"): "World_Seas_IHO_v3.parquet",
     Path("Longhurst_world_v4_2010.shp"): "Longhurst_world_v4_2010.parquet",
+    # Optional: outlines of ranges, deserts, plateaus for /place-distance.
+    Path("ne_10m_geography_regions_polys.shp"): "ne_10m_geography_regions_polys.parquet",
+    Path("ne_10m_geography_marine_polys.shp"): "ne_10m_geography_marine_polys.parquet",
     **{GSHHG_SHP / f"GSHHS_f_L{level}.shp": f"GSHHS_f_L{level}.parquet" for level in (1, 5)},
 }
 
@@ -170,6 +184,8 @@ def check_sources(downloads: Path, data_dir: Path) -> bool:
             status = "found" if found.name == src.path.name else f"found {found.name}"
         elif all((data_dir / out).exists() for out in src.outputs):
             status = "not needed (already converted)"
+        elif src.optional:
+            status = "optional, not downloaded"
         else:
             status = "MISSING"
             missing.append(src)
@@ -195,8 +211,9 @@ def convert(downloads: Path, data_dir: Path, force: bool) -> None:
     for rel, out_name in CONVERSIONS.items():
         src, out = source_file(downloads, rel), data_dir / out_name
         if not src.exists():
-            # check_sources established the parquet is there
-            print(f"  {out_name}: up to date (download deleted)")
+            # check_sources established the parquet is there, or it is optional
+            state = "up to date (download deleted)" if out.exists() else "skipped (optional, not downloaded)"
+            print(f"  {out_name}: {state}")
             continue
         if not force and is_newer(out, src):
             print(f"  {out_name}: up to date")

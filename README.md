@@ -104,6 +104,7 @@ python service/app.py                    # http://localhost:8007
 | [docs/location-hierarchy.md](docs/location-hierarchy.md) | The long-format `location_hierarchy` table: schemes, levels, SQL |
 | [docs/validation.md](docs/validation.md) | Grading a coordinate against a stated place: grades, codes, claim distances, sea relatedness, exceptions file |
 | [docs/api.md](docs/api.md) | HTTP API reference of the service |
+| [docs/place-distance.md](docs/place-distance.md) | Place names to distances for coordinate repair: how a name resolves, online lookups, evaluation |
 | [service/README.md](service/README.md) | Running and deploying the service |
 | [docs/map-layers.md](docs/map-layers.md) | Building GeoJSON map layers |
 | [docs/development.md](docs/development.md) | Package layout, tests, CI, conventions and gotchas |

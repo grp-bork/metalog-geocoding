@@ -33,6 +33,15 @@ REQUIRED_LAYERS = (
 )
 
 
+#: Layers used when present. Without them, /place-distance gives mountain
+#: ranges, deserts and plateaus (regions) and bays, gulfs and small seas
+#: (marine) as Wikidata points, not outlines.
+OPTIONAL_LAYERS = (
+    "ne_10m_geography_regions_polys.parquet",
+    "ne_10m_geography_marine_polys.parquet",
+)
+
+
 class DataDirectoryNotFound(FileNotFoundError):
     """The boundary layers are not where the resolution order said they'd be."""
 

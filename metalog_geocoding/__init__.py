@@ -12,12 +12,13 @@ Names that need the geo stack are therefore resolved lazily through the module
 * base    -- ``cache``, ``hierarchy``, ``paths``, ``country_aliases``,
              ``containment``, ``sea_relatedness``, ``vocabulary``,
              ``location_exceptions``, ``hierarchy_table``, ``samples``,
-             ``client`` and the override tables. Standard library plus
+             ``client``, ``nominatim``, ``wikidata``, ``place_names`` and
+             the override tables. Standard library plus
              ``requests``; enough to build a service request and read the
              response.
 * ``geo`` -- ``geocoder``, ``land``, ``sea``, ``longhurst``, ``coast``,
-             ``fallback``, ``claims``, ``checker``: everything that opens a
-             polygon layer.
+             ``fallback``, ``claims``, ``checker``, ``places``: everything
+             that opens a polygon layer.
 
 A module belongs in the base half only if it imports nothing beyond the
 standard library and ``requests``.
@@ -88,6 +89,7 @@ _GEO_EXPORTS = {
     "FallbackGeocoder": "fallback",
     "ClaimChecker": "claims",
     "LocationChecker": "checker",
+    "PlaceResolver": "places",
 }
 
 _GEO_HINT = (
@@ -142,6 +144,7 @@ __all__ = [
     "FallbackGeocoder",
     "ClaimChecker",
     "LocationChecker",
+    "PlaceResolver",
     # base
     "GeoCache",
     "round_coord",

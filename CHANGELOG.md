@@ -3,6 +3,16 @@
 Changes that alter a verdict are listed under **Grading**: results produced by different
 versions are not comparable there.
 
+## Unreleased
+
+### Other
+
+- New endpoint `POST /place-distance`: the distance from each of several coordinates
+  to every place a free-text name may refer to, for checking candidate repairs of a
+  broken coordinate. Names resolve against the boundary layers first, then
+  Wikidata (which place) with OpenStreetMap outlines, then OpenStreetMap's
+  Nominatim, all cached and rate-limited server-side.
+
 ## 0.2.0 (2026-10-28)
 
 ### Grading

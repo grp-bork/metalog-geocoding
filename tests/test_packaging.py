@@ -31,6 +31,9 @@ BASE_MODULES = [
     "hierarchy_table",
     "samples",
     "client",
+    "nominatim",
+    "wikidata",
+    "place_names",
 ]
 
 

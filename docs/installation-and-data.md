@@ -63,6 +63,7 @@ the repository (or anywhere else, and pass `--downloads-dir`).
 | 1 | Natural Earth 10m *Admin 0 – Countries*, shapefile zip | [Natural Earth, cultural vectors](https://www.naturalearthdata.com/downloads/10m-cultural-vectors/) | `downloads/ne_10m_admin_0_countries.shp` |
 | 2 | Natural Earth 10m *Admin 1 – States, Provinces*, shapefile zip | same page | `downloads/ne_10m_admin_1_states_provinces.shp` |
 | 3 | Natural Earth 10m *Geography Regions* polygons (under *Labels*) | [Natural Earth, physical vectors](https://www.naturalearthdata.com/downloads/10m-physical-vectors/) | `downloads/ne_10m_geography_regions_polys.shp` |
+| 3a | Natural Earth 10m *Marine Areas* polygons (under *Labels*), optional | same page | `downloads/ne_10m_geography_marine_polys.shp` |
 | 4 | MarineRegions *IHO Sea Areas*, version 3, shapefile | [marineregions.org/downloads.php](https://www.marineregions.org/downloads.php) | `downloads/World_Seas_IHO_v3.shp` |
 | 5 | MarineRegions *Longhurst Provinces*, version 4 | same page | `downloads/Longhurst_world_v4_2010.shp` |
 | 6 | GSHHG 2.3.7 shapefiles, `gshhg-shp-2.3.7.zip` (~150 MB) | [soest.hawaii.edu/pwessel/gshhg](https://www.soest.hawaii.edu/pwessel/gshhg/) | `downloads/gshhg/GSHHS_shp/f/GSHHS_f_L1.shp` |
@@ -118,6 +119,8 @@ pass `--downloads-dir` and `--data-dir` (or set `$METALOG_GEOCODING_DATA`; see
    | `Longhurst_world_v4_2010.shp` | `Longhurst_world_v4_2010.parquet` (~3 MB) |
    | `gshhg/GSHHS_shp/f/GSHHS_f_L1.shp` | `GSHHS_f_L1.parquet` (~98 MB) |
    | `gshhg/GSHHS_shp/f/GSHHS_f_L5.shp` | `GSHHS_f_L5.parquet` (~2.5 MB) |
+   | `ne_10m_geography_regions_polys.shp` | `ne_10m_geography_regions_polys.parquet` (~3 MB), optional: outlines of mountain ranges, deserts and plateaus for `POST /place-distance`; without it those places are Wikidata points |
+   | `ne_10m_geography_marine_polys.shp` | `ne_10m_geography_marine_polys.parquet` (~1 MB), optional: outlines of bays, gulfs, straits and smaller seas for `POST /place-distance` |
 
 3. **Name the landmasses.** Runs `scripts/build_landmass_names.py`, which reads
    the parquet files from step 2 plus, from `downloads/`,
@@ -150,7 +153,9 @@ data/
 ├── Longhurst_world_v4_2010.parquet
 ├── GSHHS_f_L1.parquet
 ├── GSHHS_f_L5.parquet
-└── GSHHS_f_names.parquet
+├── GSHHS_f_names.parquet
+├── ne_10m_geography_regions_polys.parquet   (optional)
+└── ne_10m_geography_marine_polys.parquet    (optional)
 ```
 
 Delete all of `downloads/`. Running `setup_data.py` again afterwards still
