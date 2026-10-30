@@ -75,7 +75,7 @@ vocabulary, uncomment the example volume and variables in the compose file.
 `GET /` (e.g. `http://localhost:8007/`) serves a page for pasting coordinates
 and seeing where they land: a Leaflet map, the raw geocode, the verdict, and
 the `location_hierarchy` rows the coordinate would contribute. It is static
-HTML in `service/static/` that calls `/geocode` and `/check` like any other
+HTML in `service/static/` that calls `/geocode`, `/check` and `/place-distance` like any other
 client, and takes its field vocabularies from `GET /options`.
 
 The paste box takes:
@@ -90,9 +90,20 @@ The paste box takes:
 `Lookup` picks the layer: `land + sea` runs both side by side; `auto`
 classifies `geographic_location` the way `/check` does.
 
+**Test repairs** also lists, for each row with a `geographic_location`, the
+coordinate's swapped and sign-flipped versions (up to eight) and how far each
+is from the place the name refers to (`POST /place-distance`). A version inside
+a polygon is green, one within 25 km of a point or line amber, and each is a
+small marker on the map. A note names the version when exactly one lands
+inside, but the page decides nothing. Place outlines are not drawn, since the
+API returns distances only. A name new to the service may come back
+`pending` while it is looked up; the page asks again for about half a minute.
+
 Two caveats:
 
-- **Lookups from the form are written to the result caches** like any other.
+- **Lookups from the form are written to the result caches** like any other,
+  and a new place name under Test repairs is looked up online (Wikidata,
+  Nominatim) and cached.
   Point `METALOG_GEOCODING_CACHE_DIR` away from a version-controlled `cache/`
   if that matters.
 - **Leaflet and the map tiles are fetched by the browser** from the internet.

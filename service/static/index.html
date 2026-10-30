@@ -65,6 +65,14 @@
       <p class="hint" id="artificial-hint"></p>
     </fieldset>
 
+    <label class="check"><input type="checkbox" id="repairs"> Test repairs</label>
+    <p class="hint">
+      Also measures how far each swapped or sign-flipped version of a
+      coordinate is from the place its <code>geographic_location</code> names
+      (<code>POST /place-distance</code>). A new name may take a few seconds
+      to look up.
+    </p>
+
     <button type="submit" id="submit">Geocode</button>
     <p class="hint">
       Click the map to append a coordinate. Grading and
@@ -85,6 +93,10 @@
     <h2>Check</h2>
     <div class="tablewrap"><table id="verdicts"></table></div>
     <p id="check-note" class="hint"></p>
+
+    <h2>Repairs</h2>
+    <div class="tablewrap"><table id="repairs-table"></table></div>
+    <p id="repairs-note" class="hint"></p>
 
     <h2>location_hierarchy</h2>
     <div class="tablewrap"><table id="hierarchy"></table></div>

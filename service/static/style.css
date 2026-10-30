@@ -122,6 +122,13 @@ td.empty, .tablewrap p { color: var(--muted); padding: 0.6rem; margin: 0; }
 .grade-uncheckable { color: var(--uncheckable); font-weight: 600; }
 .grade-no-coordinates { color: var(--muted); }
 
+label.check { display: flex; align-items: center; gap: 0.4rem; margin-top: 1rem; }
+label.check input { width: auto; margin: 0; }
+
+.fit { color: var(--ok); font-weight: 600; }
+.near { color: var(--uncheckable); font-weight: 600; }
+tr.variant-original td { background: #f3f5f7; }
+
 .error {
   background: #fdecea;
   border: 1px solid var(--error);

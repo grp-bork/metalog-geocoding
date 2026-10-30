@@ -476,7 +476,7 @@ curl -s http://localhost:8007/options
 ### `GET /`
 
 The browser form (static HTML and JavaScript under `service/static/`). Returns
-`text/html`. It is a client of this same API (`/geocode`, `/check`, `/options`)
+`text/html`. It is a client of this same API (`/geocode`, `/check`, `/place-distance`, `/options`)
 and holds no logic of its own. Static assets are served under `/static/`.
 
 ## Errors and status codes

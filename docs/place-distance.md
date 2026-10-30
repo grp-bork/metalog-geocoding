@@ -8,6 +8,8 @@ probably right. The endpoint only measures. Deciding which fix to accept, and
 how much evidence is enough, is the caller's job.
 
 The request and response formats are in [api.md](api.md#post-place-distance).
+The browser form at `GET /` has a **Test repairs** option that does this for
+pasted coordinates (see [service/README.md](../service/README.md#the-browser-form)).
 This page explains how a name becomes a geometry, why each step is there,
 and how well it works on real metadata.
 
