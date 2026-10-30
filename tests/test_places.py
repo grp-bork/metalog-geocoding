@@ -6,9 +6,14 @@ called, unless a test hands it answers.
 
 import pytest
 
-from metalog_geocoding.nominatim import LOOKUP_TABLE, NominatimClient, PlaceCache
-from metalog_geocoding.wikidata import TABLE as WIKIDATA_TABLE, WikidataClient
-from metalog_geocoding.places import (
+pytestmark = pytest.mark.geo
+
+# Skip before importing anything from the geo stack: the marker only takes
+# effect once the module has been collected, and places.py imports pyproj.
+pytest.importorskip("geopandas")
+from metalog_geocoding.nominatim import LOOKUP_TABLE, NominatimClient, PlaceCache  # noqa: E402
+from metalog_geocoding.wikidata import TABLE as WIKIDATA_TABLE, WikidataClient  # noqa: E402
+from metalog_geocoding.places import (  # noqa: E402
     name_matches,
     STATUS_LOOKUP_FAILED,
     STATUS_PENDING,
@@ -17,8 +22,6 @@ from metalog_geocoding.places import (
     LookupBudget,
     PlaceResolver,
 )
-
-pytestmark = pytest.mark.geo
 
 DISKO_BAY = {
     "osm_type": "relation",
