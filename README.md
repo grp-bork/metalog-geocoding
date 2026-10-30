@@ -9,7 +9,9 @@ An offline reverse geocoder. Given `(latitude, longitude)` it returns either a
 [MarineRegions](https://www.marineregions.org/)), falls back to the nearest
 polygon for near-shore points, and measures the signed **distance to the
 coast** ([GSHHG](https://www.soest.hawaii.edu/pwessel/gshhg/)). Point-in-polygon
-lookups need no network access.
+lookups need no network access. The one feature that goes online is optional:
+measuring how far coordinates are from a free-text place name, for checking
+repairs of broken coordinates.
 
 Developed for the [Metalog](https://metalog.embl.de) metagenomics database to
 annotate sample coordinates; every data source
@@ -23,6 +25,9 @@ was chosen so that the derived annotations can be redistributed.
 - Signed distance to coast, with the nearest landmass's name, area and country
 - Results cached in SQLite, keyed on the exact coordinate
 - Optional validation of coordinates against a stated place name
+- Optional distances from coordinates to a free-text place name (`POST /place-distance`),
+  for testing swapped or sign-flipped coordinates; names resolve through Natural
+  Earth, IHO, Wikidata and OpenStreetMap, cached and rate-limited
 - Optional HTTP service (Flask) with a browser form
 - Simplified GeoJSON map layers for every level of the hierarchy
 
@@ -35,6 +40,9 @@ was chosen so that the derived annotations can be redistributed.
 | [MarineRegions](https://www.marineregions.org/) Longhurst Provinces v4 (2010) | biogeochemical province | CC-BY 4.0 |
 | [GSHHG](https://www.soest.hawaii.edu/pwessel/gshhg/) 2.3.7, full resolution, L1/L2/L5 | distance to coast | LGPL v3 |
 | [GeoNames](https://www.geonames.org/) (build time only) | landmass names, islet countries | CC-BY 4.0 |
+| [Natural Earth](https://www.naturalearthdata.com/) 10m geography regions and marine areas (optional) | outlines of ranges, deserts, bays, gulfs for place-name distances | Public domain |
+| [Wikidata](https://www.wikidata.org/) (online, place-name distances only) | which place a name means | CC0 |
+| [OpenStreetMap](https://www.openstreetmap.org/copyright) via [Nominatim](https://nominatim.org/) (online, place-name distances only) | outlines of places the other layers lack | ODbL 1.0 |
 
 Notes:
 
@@ -43,6 +51,9 @@ Notes:
 - GSHHG is used only to compute distances; **only the derived distances are
   output, never GSHHG geometry**. The map-layer builder therefore does not
   produce any layer from it.
+- OpenStreetMap outlines, like GSHHG geometry, stay in the service's cache:
+  `/place-distance` returns distances only, with an OpenStreetMap attribution
+  whenever an OSM outline contributed.
 - Attribution is required for the CC-BY sources: credit MarineRegions wherever
   sea, ocean or Longhurst values are shown, and geonames.org wherever a
   landmass name or a GeoNames-derived coast country is shown.
@@ -52,7 +63,7 @@ Notes:
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt        # == pip install -e '.[geo,scripts]'
-# download the eight data files into downloads/ (see the link below), then:
+# download the eight data files (two more optional) into downloads/ (see below), then:
 python scripts/setup_data.py           # writes data/; ends with "Ready."
 rm -r downloads                        # no longer needed
 ```
@@ -92,6 +103,10 @@ Service (browser form at `/`, JSON API):
 ```bash
 pip install -e '.[geo,service]'
 python service/app.py                    # http://localhost:8007
+
+# How far are these candidate fixes of a coordinate from "Disko Bay"?
+curl -s localhost:8007/place-distance -H 'Content-Type: application/json' \
+  -d '{"places": [{"name": "Disko Bay", "coordinates": [[-52.1, 69.2], [69.2, -52.1]]}]}'
 ```
 
 ## Documentation
