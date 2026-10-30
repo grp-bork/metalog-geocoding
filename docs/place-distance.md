@@ -24,16 +24,38 @@ in order:
 
 1. the name as written, with Unicode, apostrophes and whitespace normalised;
 2. without a trailing parenthetical;
-3. a country adjective as its country (`Chilean` → `Chile`). A bare adjective
-   is never itself the place, so this reading comes *first*: `Spanish` is
+3. a country or region adjective as its place (`Chilean` → `Chile`, `North
+   American` → `North America`, `Andean` → `Andes`). A bare adjective is
+   never itself the place, so this reading comes *first*: `Spanish` is
    Spain, not Spanish, Ontario;
-4. without a leading compass or position word (`Southern Spain` → `Spain`,
-   `NE Germany` → `Germany`). Only after the literal name, since `Western
+4. with `Mts.` and `Mt.` spelt out (`Šumava Mts.` → `Šumava Mountains`);
+5. without a leading compass or position word (`Southern Spain` → `Spain`,
+   `NE Germany` → `Germany`, `Maritime Antarctica` → `Antarctica`, `High
+   Arctic` → `Arctic`). Only after the literal name, since `Western
    Australia` and `South Africa` are places in their own right;
-5. for `X, Y`, X alone, after the pair itself.
+6. without a leading adjective, first within its place (`Argentine
+   Patagonia` → `Patagonia, Argentina` → `Patagonia`). The bare remainder is
+   skipped when it is one feature word: `Canadian Archipelago` is not every
+   archipelago;
+7. without trailing descriptor words, one at a time (`Amundsen Sea Polynya` →
+   `Amundsen Sea`): polynya, area, region, system, coastal, (coastal) waters,
+   continental shelf, (hydrothermal) vent field(s), (large marine)
+   ecosystem(s). An upwelling is read as its current (`Humboldt Upwelling
+   System` → `Humboldt Current`), since bare `Humboldt` is a county in
+   California;
+8. for `X, Y`, X alone, after the pair itself.
 
 The first reading that finds anything wins, and the response says which one
 in `interpreted_as`. A substitution is never silent.
+
+A name that joins several places (`Southern Ocean and Atlantic Ocean`,
+`Ganges-Brahmaputra-Meghna Delta`, `Snake/Columbia`) and resolves under no
+reading is split on `and`, `/`, and hyphens between capitalised words
+(`Banyuls-sur-Mer` and `Saint-Malo` stay whole). A part of five words or more
+is a site description, not a place, and stops the split. Each part resolves through
+its own readings, the candidates of every part that resolves are returned
+together, and `interpreted_as` lists the readings used, separated by `; `
+(`Southern Ocean; Atlantic Ocean`). Parts that do not resolve are dropped.
 
 ### 2. Sources, tried for each reading
 

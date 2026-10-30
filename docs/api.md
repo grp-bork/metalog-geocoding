@@ -391,7 +391,9 @@ Australia` is the state. For each reading in turn:
    point.
 3. **Nominatim** alone, if Wikidata found nothing.
 
-The first reading that finds anything wins, and `interpreted_as` says which.
+The first reading that finds anything wins, and `interpreted_as` says which. A name joining several places (`Southern Ocean and
+Atlantic Ocean`) that resolves under no reading is resolved part by part; see
+[place-distance.md](place-distance.md).
 
 Response, one entry per place in request order:
 
@@ -399,7 +401,7 @@ Response, one entry per place in request order:
 | --- | --- | --- |
 | `name` | string | As sent. |
 | `status` | string | `resolved`; `unresolved` (nothing found under any reading); `pending` (needs a Nominatim lookup this request had no budget for: send it again); `lookup_failed` (Nominatim unreachable: send it again later). Only `resolved` carries candidates. An unresolved name is no evidence about a coordinate. |
-| `interpreted_as` | string or null | The reading that resolved. |
+| `interpreted_as` | string or null | The reading that resolved; for a name resolved part by part, the readings used, separated by `; `. |
 | `message` | string or null | Why a name did not resolve. |
 | `candidates` | array | Every place the name may be. Ambiguous names have several (`Georgia`: the country and the US state). |
 | `candidates[].source` | string | `natural_earth_admin0`, `natural_earth_admin1`, `natural_earth_region`, `natural_earth_marine`, `iho`, `wikidata` or `osm`. |

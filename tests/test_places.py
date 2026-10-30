@@ -168,6 +168,14 @@ def test_a_restaurant_named_after_a_place_is_not_a_candidate(geocoder, vocabular
     assert res.status == STATUS_UNRESOLVED
 
 
+def test_a_name_joining_several_places_resolves_part_by_part(geocoder, vocabulary):
+    local_only = PlaceResolver(geocoder, vocabulary, None)
+    res = local_only.resolve("Spain and Nowhere In Particular / Portugal")
+    assert res.status == STATUS_RESOLVED
+    assert res.interpreted_as == "Spain; Portugal"
+    assert [c.label for c in res.candidates] == ["Spain", "Portugal"]
+
+
 def test_nothing_found_is_unresolved_not_far_away(resolver):
     res = resolver.resolve("Nowhere In Particular")
     assert res.status == STATUS_UNRESOLVED
@@ -304,10 +312,10 @@ def test_an_alias_names_the_item(geocoder, vocabulary, tmp_path):
 
 
 def test_an_item_that_is_not_a_place_is_skipped(geocoder, vocabulary, tmp_path):
-    resolver = _wikidata_only(geocoder, vocabulary, tmp_path, "Tibetan", [
-        _hit("Q34271", "Tibetan", "language of Tibet", [31.0, 88.0], 150),
+    resolver = _wikidata_only(geocoder, vocabulary, tmp_path, "Quechua", [
+        _hit("Q5218", "Quechua", "language of the Andes", [-13.0, -72.0], 150),
     ])
-    assert resolver.resolve("Tibetan").status == STATUS_UNRESOLVED
+    assert resolver.resolve("Quechua").status == STATUS_UNRESOLVED
 
 
 def test_a_natural_earth_region_gives_a_wikidata_item_its_outline(geocoder, vocabulary, tmp_path):

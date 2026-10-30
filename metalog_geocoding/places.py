@@ -46,7 +46,7 @@ from shapely.ops import nearest_points
 from .containment import CONTAINED_IN
 from .country_aliases import canonical, normalise
 from .nominatim import LookupUnavailable, NominatimClient
-from .place_names import interpretations
+from .place_names import interpretations, parts
 from .wikidata import WikidataClient
 
 #: Nominatim results kept as candidates, as OSM ``category`` -> accepted
@@ -597,32 +597,35 @@ class PlaceResolver:
         Nominatim alone. ``country`` (ISO 3166-1 alpha-2) narrows admin-1 units
         and Nominatim to one country; a country or sea name is not narrowed.
         ``budget`` caps the online requests; None means no cap.
+
+        A name that joins several places (``place_names.parts``) and resolves
+        under no reading is resolved part by part: every part that resolves
+        contributes its candidates, and ``interpreted_as`` lists the readings
+        used, separated by ``; ``.
         """
         readings = interpretations(name)
         if not readings:
             return Resolution(name, STATUS_UNRESOLVED, message="empty place name")
         countrycodes = (country or "").lower()
+        tried = list(readings)
         try:
-            for reading in readings:
-                local = self._local(reading, country)
-                if local:
-                    return Resolution(name, STATUS_RESOLVED, reading, local)
-                if self.wikidata is not None:
-                    hits = self._online(
-                        lambda: self.wikidata.search(reading),
-                        self.wikidata.cached(reading), budget, 2,
-                    )
-                    chosen = self._wikidata_candidates(reading, hits, country, budget)
-                    if chosen:
-                        return Resolution(name, STATUS_RESOLVED, reading, chosen)
-                if self.nominatim is not None:
-                    results = self._online(
-                        lambda: self.nominatim.search(reading, countrycodes),
-                        self.nominatim.cached(reading, countrycodes), budget, 1,
-                    )
-                    found = self._osm_candidates(reading, results)
-                    if found:
-                        return Resolution(name, STATUS_RESOLVED, reading, found)
+            found = self._first_reading(readings, country, countrycodes, budget)
+            if found:
+                return Resolution(name, STATUS_RESOLVED, *found)
+            used, candidates, seen = [], [], set()
+            for part in parts(name):
+                part_readings = interpretations(part)
+                tried += [r for r in part_readings if r not in tried]
+                found = self._first_reading(part_readings, country, countrycodes, budget)
+                if not found:
+                    continue
+                used.append(found[0])
+                for candidate in found[1]:
+                    if (candidate.source, candidate.id) not in seen:
+                        seen.add((candidate.source, candidate.id))
+                        candidates.append(candidate)
+            if candidates:
+                return Resolution(name, STATUS_RESOLVED, "; ".join(used), candidates)
         except _OutOfBudget:
             return Resolution(
                 name, STATUS_PENDING,
@@ -632,8 +635,32 @@ class PlaceResolver:
             return Resolution(name, STATUS_LOOKUP_FAILED, message=str(exc))
         return Resolution(
             name, STATUS_UNRESOLVED,
-            message=f"no place found for any reading: {', '.join(readings)}",
+            message=f"no place found for any reading: {', '.join(tried)}",
         )
+
+    def _first_reading(self, readings, country, countrycodes, budget):
+        """``(reading, candidates)`` for the first reading that finds any, or None."""
+        for reading in readings:
+            local = self._local(reading, country)
+            if local:
+                return reading, local
+            if self.wikidata is not None:
+                hits = self._online(
+                    lambda: self.wikidata.search(reading),
+                    self.wikidata.cached(reading), budget, 2,
+                )
+                chosen = self._wikidata_candidates(reading, hits, country, budget)
+                if chosen:
+                    return reading, chosen
+            if self.nominatim is not None:
+                results = self._online(
+                    lambda: self.nominatim.search(reading, countrycodes),
+                    self.nominatim.cached(reading, countrycodes), budget, 1,
+                )
+                found = self._osm_candidates(reading, results)
+                if found:
+                    return reading, found
+        return None
 
 
 class _OutOfBudget(Exception):

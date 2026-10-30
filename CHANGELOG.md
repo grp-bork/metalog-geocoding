@@ -12,6 +12,10 @@ versions are not comparable there.
   broken coordinate. Names resolve against the boundary layers first, then
   Wikidata (which place) with OpenStreetMap outlines, then OpenStreetMap's
   Nominatim, all cached and rate-limited server-side.
+- `/place-distance` reads more name shapes: trailing descriptors (`Amundsen Sea
+  Polynya`), upwellings as their current, region adjectives (`North American`),
+  more leading qualifiers (`Maritime Antarctica`), `Mts.`, and names joining several
+  places (`Southern Ocean and Atlantic Ocean`), resolved part by part.
 
 ## 0.2.0 (2026-10-28)
 
